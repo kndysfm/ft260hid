@@ -1,7 +1,9 @@
 use std::collections::{HashMap, VecDeque};
+use std::collections::vec_deque::Iter;
 
+#[derive(Debug)]
 pub(crate) struct ReportFifo {
-  dict: HashMap<u8, VecDeque<u8>>,
+  dict: HashMap<u8, VecDeque<Vec<u8>>>,
 } 
 
 impl ReportFifo {
@@ -18,33 +20,57 @@ impl ReportFifo {
 
   const ID_MASK:u8 = 0xF0u8;
 
-  pub fn push_report(&mut self, data:&[u8]) {
-    let k = data[0] & Self::ID_MASK;
-    if (!self.dict.contains_key(&k)) {
+  /// check if a key exists in dictionary or else insert new queue for the key
+  fn check_key(&mut self, k:u8) -> bool{
+    if self.dict.contains_key(&k) {
+      true
+    } else {
       self.dict.insert(k, VecDeque::new());
-    }
-    self.dict[&k].extend(&data[1..]);
-  }
-
-  pub fn pop_report(&mut self, id: u8) -> &[u8]{
-    let k = id & Self::ID_MASK;
-    if (!self.dict.contains_key(&k) ||
-      self.dict[&k].len() == 0) {
-      &[]
-    } else {
-      let drained: Vec<u8> = self.dict[&k].drain(..).collect();
-      &drained
+      false
     }
   }
 
-  pub fn len_byte(&self, id:u8) -> usize{
+  pub fn clear(&mut self, id: u8) {
     let k = id & Self::ID_MASK;
-    if (self.dict.contains_key(&k)) {
-      self.dict.len()
+    if self.check_key(k) {
+      self.dict.get_mut(&k).unwrap().clear();
+    }
+  }
+
+  pub fn push_report(&mut self, data:Vec<u8>) {
+    let k = data[0] & Self::ID_MASK;
+    self.check_key(k);
+    self.dict.get_mut(&k).unwrap().push_back(data);
+  }
+
+  pub fn pop_report(&mut self, id: u8) -> Option<Vec<u8>>{
+    let k = id & Self::ID_MASK;
+    if self.check_key(k) {
+      self.dict.get_mut(&k).unwrap().pop_front()
     } else {
+      // queue has been just created
+      None
+    }
+  }
+
+  /// number of reports with a ID in queue
+  pub fn len(&mut self, id:u8) -> usize{
+    let k = id & Self::ID_MASK;
+    if self.check_key(k) {
+      self.dict[&k].len()
+    } else {
+      // queue has been just created
       0
     }
   }
+
+  /// iterate and peek reports with a ID in queue 
+  pub fn iter_peek(&mut self, id:u8) -> Iter<'_, Vec<u8>>{
+    let k = id & Self::ID_MASK;
+    self.check_key(k);
+    self.dict[&k].iter()
+  }
+
 }
 
 impl Drop for ReportFifo {

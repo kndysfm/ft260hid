@@ -5,30 +5,32 @@
 
 use bitflags::bitflags;
 
+use crate::{Ft260Error, Ft260Result};
+
 #[repr(u8)]
 pub(crate) enum Ft260Status
 {
-    OK = 0,
-    INVALID_HANDLE,
-    DEVICE_NOT_FOUND,
-    DEVICE_NOT_OPENED,
-    DEVICE_OPEN_FAIL,
-    DEVICE_CLOSE_FAIL,
-    INCORRECT_INTERFACE,
-    INCORRECT_CHIP_MODE,
-    DEVICE_MANAGER_ERROR,
-    IO_ERROR,
-    INVALID_PARAMETER,
-    NULL_BUFFER_POINTER,
-    BUFFER_SIZE_ERROR,
-    UART_SET_FAIL,
-    RX_NO_DATA,
-    GPIO_WRONG_DIRECTION,
-    INVALID_DEVICE,
-    INVALID_OPEN_DRAIN_SET,
-    INVALID_OPEN_DRAIN_RESET,
-    I2C_READ_FAIL,
-    OTHER_ERROR,
+    Ok = 0,
+    InvalidHandle,
+    DeviceNotFound,
+    DeviceNotOpened,
+    DeviceOpenFail,
+    DeviceCloseFail,
+    IncorrectInterface,
+    IncorrectChipMode,
+    DeviceManagerError,
+    IoError,
+    InvalidParameter,
+    NullBufferPointer,
+    BufferSizeError,
+    UartSetFail,
+    RxNoData,
+    GpioWrongDirection,
+    InvalidDevice,
+    InvalidOpenDrainSet,
+    InvalidOpenDrainReset,
+    I2cReadFail,
+    OtherError,
 }
 
 bitflags! {
@@ -281,7 +283,7 @@ bitflags! {
 
 bitflags! {
   #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-  pub(crate) struct I2cContition : u8
+  pub(crate) struct I2cCondition : u8
   {
     const None            = 0;
     const Start           = 2;
@@ -375,6 +377,30 @@ bitflags! {
   }
 }
 
+// see "https://stackoverflow.com/questions/28028854/how-do-i-match-enum-values-with-an-integer"
+macro_rules! back_to_enum {
+  ($(#[$meta:meta])* $vis:vis enum $name:ident {
+      $($(#[$vmeta:meta])* $vname:ident $(= $val:expr)?,)*
+  }) => {
+      $(#[$meta])*
+      $vis enum $name {
+          $($(#[$vmeta])* $vname $(= $val)?,)*
+      }
+
+      impl std::convert::TryFrom<u8> for $name {
+          type Error = ();
+
+          fn try_from(v: u8) -> Result<Self, Self::Error> {
+              match v {
+                  $(x if x == $name::$vname as u8 => Ok($name::$vname),)*
+                  _ => Err(()),
+              }
+          }
+      }
+  }
+}
+
+back_to_enum! {
 #[repr(u8)]
 pub(crate) enum ReportId
 {
@@ -422,6 +448,7 @@ pub(crate) enum ReportId
     InOutUartReport38 = 0xFD,
     InOutUartReport3C = 0xFE,
     InOutUartReportOverflow = 0xFF,
+}
 }
 
 /// Each report length value include ID
