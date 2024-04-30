@@ -41,8 +41,8 @@ bitflags! {
   }
 }
 
+/// operation clock
 #[repr(u8)]
-
 pub(crate) enum ClkCtl
 {
     _12MHz = 0,
@@ -95,29 +95,43 @@ pub(crate) enum UartDcdRiEnableMode
     Enabled = 1,
 }
 
+/// Pin configuration of DIO7
 #[repr(u8)]
 pub(crate) enum Gpio2Function
 {
+    /// GPIO2
     Gpio = 0,
+    /// [default] the indicator when entering the USB suspending state
     SuspOut = 1,
+    /// as the power enable indicator when the FT260 is USB enumerated
     _PwrEn = 2,
-    TxLed = 4,
-}
-/// Byte 9
-#[repr(u8)]
-pub(crate) enum GpioAFunction
-{
-    Gpio = 0,
-    TxActive = 3,
+    /// 
     TxLed = 4,
 }
 
+/// Pin configuration of DIO0
+#[repr(u8)]
+pub(crate) enum GpioAFunction
+{
+    /// GPIOA
+    Gpio = 0,
+    /// [default] to indicate the UART transmitting is active
+    TxActive = 3,
+    /// as the LED driving source when data is transmitted on UART TX port
+    TxLed = 4,
+}
+
+/// Pin configuration of DIO13
 #[repr(u8)]
 pub(crate) enum GpioGFunction
 {
+    /// GPIOG
     Gpio= 0,
+    /// as the power enable indicator when FT260 is USB enumerated. Low active
     _PwrEn = 2,
+    /// as the LED driving source when data is received on UART RX port
     RxLed = 5,
+    /// [default] as the battery charger detection indicator output when the device is connected to a dedicated battery charger port
     BcdDet = 6,
 }
 
@@ -135,6 +149,7 @@ pub(crate) enum WakeupIntEnableMode
     Enabled = 1,
 }
 
+/// interrupt trigger by input to GPIO3 (DIO8)
 /// tigger conditions on the interrupt pin
 #[repr(u8)]
 pub(crate) enum InterruptTrigger
@@ -165,8 +180,8 @@ pub(crate) enum UartParity
     None = 0,
     Odd = 1,
     Even = 2,
-    High = 3, // parity bit is alwasy high
-    Low = 4, // parity bit is alwasy low
+    High = 3, // parity bit is always high
+    Low = 4, // parity bit is always low
 }
 
 #[repr(u8)]
@@ -196,6 +211,8 @@ bitflags! {
   }
 }
 
+/// RI, Ring Indicator, can be enabled via a USB command for the UART interface. 
+/// RI may be used as an alternative to WAKEUP for waking up the USB host.
 #[repr(u8)]
 pub(crate) enum UartRiWakeupConfig
 {
@@ -268,6 +285,15 @@ pub(crate) enum Request
 }
 
 bitflags! {
+    /// ref :  "LibFT260-v1.1.5\samples\I2C\i2c.cpp"
+    /// I2C Master Controller Status (I2Cstauts variable)
+    ///   bit 0 = controller busy: all other status bits invalid
+    ///   bit 1 = error condition
+    ///   bit 2 = slave address was not acknowledged during last operation
+    ///   bit 3 = data not acknowledged during last operation
+    ///   bit 4 = arbitration lost during last operation
+    ///   bit 5 = controller idle
+    ///   bit 6 = bus busy
   #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
   pub(crate) struct I2cBusStatus : u8
   {
@@ -290,6 +316,7 @@ bitflags! {
     const ReStart         = 3;
     const Stop            = 4;
     const StartAndStop    = 6;
+    const ReStartAndStop  = 7;
   }
 }
 
