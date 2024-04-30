@@ -26,3 +26,6 @@
 //! To add, short-circuit `IO2` - `IO3`, or `JP6.9` to `JP.8`.  
 //! 
 pub mod open;
+pub mod gpio;
+pub mod i2c;
+pub mod uart;

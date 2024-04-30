@@ -7,6 +7,7 @@ pub struct Gpio<'a> {
   device: &'a Device,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Pin {
   Gpio0,
   Gpio1,
@@ -24,6 +25,7 @@ pub enum Pin {
   GpioH,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Group {
   Gpio_0_1,
   Gpio_2,
@@ -34,11 +36,13 @@ pub enum Group {
   Gpio_G,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Dir {
   In,
   Out,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Val {
   Low,
   High,
