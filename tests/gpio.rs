@@ -29,10 +29,10 @@ fn read_value() {
       thread::sleep(delay);
       let res = gpio.read(io.1); // read out
       assert!(res.is_ok()); 
-      assert_eq!(res.unwrap(), v);
+      assert!(matches!(res.unwrap(), v));
       let res = gpio.read(io.0); // read in
       assert!(res.is_ok()); 
-      assert_eq!(res.unwrap(), v);
+      assert!(matches!(res.unwrap(), v));
     }
   }
 

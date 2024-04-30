@@ -85,6 +85,7 @@ pub(crate) fn ft260_set_feature(device: &Device, data: &[u8]) -> Ft260Result<()>
 
 pub(crate) fn ft260_get_feature(device: &Device, report_id: u8) -> Ft260Result<[u8;64]> {
     let mut buf = [0u8;64];
+    buf[0] = report_id;
     let res = device.get_feature(&mut buf);
     if let Ok(sz) = res {
         Ok(buf)
@@ -337,6 +338,321 @@ pub(crate) fn ft260_i2c_master_get_status(device: &Device) -> Ft260Result<u8> {
 pub(crate) fn ft260_i2c_master_reset(device: &Device) -> Ft260Result<()> {
     ft260_set_request(device, Request::ResetI2c)
 }
+
+/* //
+
+pub(crate) FT260_STATUS FT260_UART_Init(device: &Device) -> Ft260Result<()> {}
+{
+    const uint BaudDefault = 115200;
+    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::ConfigureUart,
+        (byte)UartEnableMode.DtrDsr,
+        (byte)((BaudDefault >> 0) & 0xFF),
+        (byte)((BaudDefault >> 8) & 0xFF),
+        (byte)((BaudDefault >> 16) & 0xFF),
+        (byte)((BaudDefault >> 24) & 0xFF),
+        (byte)UartDataBits.Eight,
+        (byte)UartParity.None,
+        (byte)UartStopBit.One,
+        (byte)UartBreaking.NoBreak);
+}
+
+pub(crate) fn FT260_UART_SetBaudRate(device: &Device, baudRate: uint) -> Ft260Result<()> {}
+{
+    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::SetUartBaudRate,
+        (byte)((baudRate >> 0) & 0xFF),
+        (byte)((baudRate >> 8) & 0xFF),
+        (byte)((baudRate >> 16) & 0xFF),
+        (byte)((baudRate >> 24) & 0xFF));
+}
+
+pub(crate) fn FT260_UART_SetFlowControl(device: &Device, flowControl: UartEnableMode) -> Ft260Result<()> {}
+{
+    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::SetUartMode, (byte)flowControl);
+}
+
+pub(crate) FT260_STATUS FT260_UART_SetDataCharacteristics(device: &Device,
+    dataBits: UartDataBits
+    stopBits: UartStopBit
+    parity: UartParity)
+{
+    let res = setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::SetUartDataBit, (byte)dataBits);
+    if (res != FT260_STATUS.OK) return res;
+    res = setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::SetUartStopBit, (byte)stopBits);
+    if (res != FT260_STATUS.OK) return res;
+    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
+                    (byte)Request::SetUartParity, (byte)parity);
+}
+
+pub(crate) FT260_STATUS FT260_UART_SetBreakOn(device: &Device) -> Ft260Result<()> {}
+{
+    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::SetUartBreaking, (byte)UartBreaking.Break);
+}
+
+pub(crate) FT260_STATUS FT260_UART_SetBreakOff(device: &Device) -> Ft260Result<()> {}
+{
+    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::SetUartBreaking, (byte)UartBreaking.NoBreak);
+}
+
+pub(crate) FT260_STATUS FT260_UART_SetXonXoffChar(device: &Device,
+    Xon: u8, Xoff: u8)
+{
+    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::SetUartXonXoff, Xon, Xoff);
+}
+
+pub(crate) struct UartConfig
+{
+    pub(crate) UartEnableMode Mode;
+    pub(crate) uint BaudRate;
+    pub(crate) UartDataBits DataBits;
+    pub(crate) UartParity Parity;
+    pub(crate) UartStopBit StopBit;
+    pub(crate) UartBreaking Breaking;
+}
+
+pub(crate) FT260_STATUS FT260_UART_GetConfig(device: &Device, out pUartConfig: UartConfig)
+{
+    pUartConfig = new UartConfig();
+    if (getFeature(hid, ReportId::FeatUartStatus, out &[u8] dat) &&
+        dat[0] == (byte)ReportId::FeatUartStatus)
+    {
+        pUartConfig.Mode = (UartEnableMode)dat[1];
+        pUartConfig.BaudRate = (uint)((dat[5] << 24) | (dat[4] << 16) | (dat[3] << 8) | (dat[2] << 0));
+        pUartConfig.DataBits = (UartDataBits)dat[6];
+        pUartConfig.Parity = (UartParity)dat[7];
+        pUartConfig.StopBit = (UartStopBit)dat[8];
+        pUartConfig.Breaking = (UartBreaking)dat[9];
+        return FT260_STATUS.OK;
+    }
+    return FT260_STATUS.OTHER_ERROR;
+}
+
+pub(crate) FT260_STATUS FT260_UART_GetQueueStatus(device: &Device,
+    out lpdwAmountInRxQueue: uint)
+{
+    Debug.Assert(IsAsyncReadMode, "UART requires asynchronous read of HidDevice.");
+    lpdwAmountInRxQueue = (uint)GetInputReportByteAmountUart();
+    return FT260_STATUS.OK;
+}
+
+ReportId DecideUartReportId(length: u8)
+{
+    if (length <= 0x04) return ReportId::InOutUartReport04;
+    if (length <= 0x08) return ReportId::InOutUartReport08;
+    if (length <= 0x0C) return ReportId::InOutUartReport0C;
+    if (length <= 0x10) return ReportId::InOutUartReport10;
+    if (length <= 0x14) return ReportId::InOutUartReport14;
+    if (length <= 0x18) return ReportId::InOutUartReport18;
+    if (length <= 0x1C) return ReportId::InOutUartReport1C;
+    if (length <= 0x20) return ReportId::InOutUartReport20;
+    if (length <= 0x24) return ReportId::InOutUartReport24;
+    if (length <= 0x28) return ReportId::InOutUartReport28;
+    if (length <= 0x2C) return ReportId::InOutUartReport2C;
+    if (length <= 0x30) return ReportId::InOutUartReport30;
+    if (length <= 0x34) return ReportId::InOutUartReport34;
+    if (length <= 0x38) return ReportId::InOutUartReport38;
+    if (length <= 0x3C) return ReportId::InOutUartReport3C;
+    else return ReportId::InOutI2cReportOverflow;
+}
+
+const byte UartPayloadSizeMax = 0x3C;
+
+byte DecideUartPayloadSize(id: ReportId)
+{
+    switch (id)
+    {
+        case ReportId::InOutUartReport04: return 0x04;
+        case ReportId::InOutUartReport08: return 0x08;
+        case ReportId::InOutUartReport0C: return 0x0C;
+        case ReportId::InOutUartReport10: return 0x10;
+        case ReportId::InOutUartReport14: return 0x14;
+        case ReportId::InOutUartReport18: return 0x18;
+        case ReportId::InOutUartReport1C: return 0x1C;
+        case ReportId::InOutUartReport20: return 0x20;
+        case ReportId::InOutUartReport24: return 0x24;
+        case ReportId::InOutUartReport28: return 0x28;
+        case ReportId::InOutUartReport2C: return 0x2C;
+        case ReportId::InOutUartReport30: return 0x30;
+        case ReportId::InOutUartReport34: return 0x34;
+        case ReportId::InOutUartReport38: return 0x38;
+        case ReportId::InOutUartReport3C: return 0x3C;
+        default: return 0;
+    }
+}
+
+bool UartWriteRequest(device: &Device, reportId: ReportId, length: u8, data: &[u8])
+{
+    Debug.Assert(length <= data.Length);
+
+    let buf = new byte[length + 2];
+    buf[0] = (byte)reportId;
+    buf[1] = length;
+    Array.Copy(data, 0, buf, 2, length);
+    return hid.Write(buf);
+}
+
+pub(crate) FT260_STATUS FT260_UART_Read(device: &Device,
+    buf: &[u8],
+    dwBufferLength: uint,
+    byte_to_read: uint,
+    out lpdwBytesReturned: uint)
+{
+    Debug.Assert(IsAsyncReadMode, "UART requires asynchronous read of HidDevice.");
+    Debug.Assert(buf.Length >= byte_to_read);
+
+    lpdwBytesReturned = 0;
+    int idx = 0;
+    while (lpdwBytesReturned < byte_to_read)
+    {
+        if (GetInputReportsCountUart() == 0)
+        {
+            break;
+        }
+
+        let data = PopInputReportUart();
+        if (data.Length < 2)
+        {
+            Debug.WriteLine($"[{GetCurrentMethod().Name}] Input report is too short (length = {data.Length})");
+            return FT260_STATUS.OTHER_ERROR;
+        }
+        let size = DecideUartPayloadSize((ReportId)data[0]);
+        if (size == 0 || size > data.Length - 2)
+        { // other report ID, ignore it
+            Debug.WriteLine($"[{GetCurrentMethod().Name}] Wrong report ID 0x{data[0]:X2}");
+            return FT260_STATUS.OTHER_ERROR;
+        }
+        let len = data[1];
+        if (data.Length < len + 2)
+        {
+            Debug.WriteLine($"[{GetCurrentMethod().Name}] Input report is too short (decl = {len}, actual = {data.Length - 2})");
+            return FT260_STATUS.OTHER_ERROR;
+        }
+        let sz = Math.Min(buf.Length - idx, len);
+        Array.Copy(data, 2, buf, idx, sz);
+        lpdwBytesReturned += (uint)sz;
+        idx += sz;
+    }
+
+    return FT260_STATUS.OK;
+}
+
+pub(crate) FT260_STATUS FT260_UART_Write(device: &Device,
+    buf: &[u8],
+    dwBufferLength: uint,
+    byte_to_write: uint,
+    out lpdwBytesWritten: uint)
+{
+    Debug.Assert(buf.Length >= byte_to_write);
+    Debug.Assert(buf.Length >= dwBufferLength);
+
+    uint written = 0;
+    uint remained = byte_to_write;
+
+    while (remained > 0)
+    {
+        byte size;
+        if (remained > UartPayloadSizeMax)
+        {
+            size = UartPayloadSizeMax;
+        }
+        else
+        {   // it's the last output report
+            size = (byte)remained;
+        }
+        let rid = DecideUartReportId(size);
+        Debug.Assert(0xF0 <= (byte)rid && (byte)rid <= 0xFE);
+        let slice = new byte[size];
+        Array.Copy(buf, written, slice, 0, size);
+        remained -= size;
+        let res = UartWriteRequest(hid, rid, size, slice);
+        Thread.Yield();
+        if (!res)
+        {
+            Debug.WriteLine($"[{GetCurrentMethod().Name}] Fail to write HID output report");
+            lpdwBytesWritten = written;
+            return FT260_STATUS.IO_ERROR;
+        }
+        else
+        {
+            Debug.WriteLine($"[{GetCurrentMethod().Name}] Succeed to write {size} bytes payload");
+        }
+        written += size;
+    }
+
+    lpdwBytesWritten = written;
+    return FT260_STATUS.OK;
+}
+
+pub(crate) FT260_STATUS FT260_UART_Reset(device: &Device) -> Ft260Result<()> {}
+{
+    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::ResetUart);
+}
+
+pub(crate) FT260_STATUS FT260_UART_GetDcdRiStatus(device: &Device,
+    out value: UartDcdRiStatus)
+{
+    if (getFeature(hid, ReportId::FeatUartRiAndDcdStatus, out &[u8] dat) &&
+        dat[0] == (byte)ReportId::FeatUartRiAndDcdStatus)
+    {
+        value = (UartDcdRiStatus)dat[1];
+        return FT260_STATUS.OK;
+    }
+    value = 0;
+    return FT260_STATUS.OTHER_ERROR;
+}
+
+pub(crate) fn FT260_UART_EnableRiWakeup(device: &Device, enable: WakeupIntEnableMode) -> Ft260Result<()> {}
+{
+    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::EnableUartRiWaveup, (byte)enable);
+}
+
+pub(crate) FT260_STATUS FT260_UART_SetRiWakeupConfig(device: &Device,
+    type: UartRiWakeupConfig)
+{
+    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
+        (byte)Request::SetUartRiWakeupConfig, (byte)type);
+}
+
+
+
+
+pub(crate) bool InterruptFlag = false;
+
+pub(crate) FT260_STATUS FT260_GetInterruptFlag(device: &Device, ref pbFlag: bool)
+{
+    do
+    {   // read all queued Interrupt Status report
+        let data = PopInputReportInt();
+        if (data == null) { break; }
+        if (data.Length >= 3 &&
+            data[0] == (byte)ReportId::InInterruptStatus &&
+            (data[1] & 1) != 0)
+        {
+            InterruptFlag = true;
+        }
+    } while (true);
+    pbFlag = InterruptFlag;
+    return FT260_STATUS.OK;
+}
+
+pub(crate) FT260_STATUS FT260_CleanInterruptFlag(device: &Device, ref pbFlag: bool)
+{
+    let res = FT260_GetInterruptFlag(hid, ref pbFlag);
+    InterruptFlag = false; // clear
+    return res;
+}
+
+
+// */
 
 #[derive(Clone, Copy)]
 struct GpioRequest

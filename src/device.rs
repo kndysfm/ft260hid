@@ -61,8 +61,8 @@ impl Device {
       let mutex_hid = mutex_hid.clone();
       let mutex_fifo = mutex_fifo.clone();
       let reading = reading.clone();
+      print!("now starting a thread to read HID");
       move || loop {
-        print!("now starting a thread to read HID");
         let mut buf = [0u8;256];
         let mut has_report = false;
         if let Ok(hid) = mutex_hid.lock() {
