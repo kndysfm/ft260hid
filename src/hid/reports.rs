@@ -1,3 +1,5 @@
+use bitflags::Flags;
+
 use crate::device::{Device};
 use crate::{Ft260Result, Ft260Error};
 use crate::hid::consts::*;
@@ -81,6 +83,15 @@ pub(crate) fn ft260_set_feature(device: &Device, data: &[u8]) -> Ft260Result<()>
   device.set_feature(data)
 }
 
+pub(crate) fn ft260_get_feature(device: &Device, report_id: u8) -> Ft260Result<[u8;64]> {
+    let mut buf = [0u8;64];
+    let res = device.get_feature(&mut buf);
+    if let Ok(sz) = res {
+        Ok(buf)
+    } else {
+        Err(res.err().unwrap())
+    }
+}
 
 pub(crate) fn ft260_set_clock(device: &Device, clk: ClkCtl) -> Ft260Result<()> {
   ft260_set_request_u8(device, Request::SetClock, clk as u8)
@@ -141,12 +152,8 @@ pub(crate) fn ft260_enable_i2c_pin(device: &Device, enable: I2cEnableMode) -> Ft
   ft260_set_request_u8(device, Request::SetI2cMode, enable as u8)
 }
 
-pub(crate) fn ft260_set_uart_to_gpio_pin(device: &Device) -> Ft260Result<()> {
-  ft260_set_request_u8(device, Request::SetUartMode, UartEnableMode::Off as u8)
-}
-
-pub(crate) fn ft260_set_gpio_to_uart_pin(device: &Device) -> Ft260Result<()> {
-  ft260_set_request_u8(device, Request::SetUartMode, UartEnableMode::NoFlowControl as u8)
+pub(crate) fn ft260_enable_uart_pin(device: &Device, enable: UartEnableMode) -> Ft260Result<()> {
+  ft260_set_request_u8(device, Request::SetUartMode, enable as u8)
 }
 
 pub(crate) fn ft260_enable_dcd_ri_pin(device: &Device, enable: UartDcdRiEnableMode) -> Ft260Result<()> {
@@ -331,3 +338,109 @@ pub(crate) fn ft260_i2c_master_reset(device: &Device) -> Ft260Result<()> {
     ft260_set_request(device, Request::ResetI2c)
 }
 
+#[derive(Clone, Copy)]
+struct GpioRequest
+{
+    /// GPIO 0-5 pin value
+    pub val: GpioBitVal,
+    /// GPIO 0-5 direction (0: input, 1: output)
+    pub dir: GpioBitVal,
+    /// GPIO A-H pin value
+    pub ex_val: GpioExBitVal,
+    /// GPIO A-H direction (0: input, 1: output)
+    pub ex_dir: GpioExBitVal,
+}
+
+/// 4.7.1 GPIO Write Request
+fn ft260_gpio_set(device: &Device, report: GpioRequest) -> Ft260Result<()> {
+    ft260_set_feature(device, &[
+        ReportId::FeatGpio as u8, report.val.bits(), report.dir.bits(), report.ex_val.bits(), report.ex_dir.bits()
+    ])
+}
+
+/// 4.7.2 GPIO Read Request
+fn ft260_gpio_get(device: &Device) -> Ft260Result<GpioRequest> {
+    let rid = ReportId::FeatGpio as u8;
+    let res = ft260_get_feature(device, rid);
+    if let Ok(report) = res {
+        assert_eq!(rid, report[0]);
+        Ok(GpioRequest {
+            val: GpioBitVal::from_bits(report[1]).unwrap(),
+            dir: GpioBitVal::from_bits(report[2]).unwrap(),
+            ex_val: GpioExBitVal::from_bits(report[3]).unwrap(),
+            ex_dir: GpioExBitVal::from_bits(report[4]).unwrap(),
+        })
+    } else{
+        Err(res.err().unwrap())
+    }
+}
+
+fn ft260_gpio_pin_to_bits(pin: GpioPinNum) -> (GpioBitVal, GpioExBitVal) {
+    let mut bits: GpioBitVal = GpioBitVal::from_bits(0).unwrap();
+    if pin.contains(GpioPinNum::GPIO_0) { bits.set(GpioBitVal::_0, true); }
+    if pin.contains(GpioPinNum::GPIO_1) { bits.set(GpioBitVal::_1, true); }
+    if pin.contains(GpioPinNum::GPIO_2) { bits.set(GpioBitVal::_2, true); }
+    if pin.contains(GpioPinNum::GPIO_3) { bits.set(GpioBitVal::_3, true); }
+    if pin.contains(GpioPinNum::GPIO_4) { bits.set(GpioBitVal::_4, true); }
+    if pin.contains(GpioPinNum::GPIO_5) { bits.set(GpioBitVal::_5, true); }
+    let mut ex_bits: GpioExBitVal = GpioExBitVal::from_bits(0).unwrap();
+    if pin.contains(GpioPinNum::GPIO_A) { ex_bits.set(GpioExBitVal::_A, true); }
+    if pin.contains(GpioPinNum::GPIO_B) { ex_bits.set(GpioExBitVal::_B, true); }
+    if pin.contains(GpioPinNum::GPIO_C) { ex_bits.set(GpioExBitVal::_C, true); }
+    if pin.contains(GpioPinNum::GPIO_D) { ex_bits.set(GpioExBitVal::_D, true); }
+    if pin.contains(GpioPinNum::GPIO_E) { ex_bits.set(GpioExBitVal::_E, true); }
+    if pin.contains(GpioPinNum::GPIO_F) { ex_bits.set(GpioExBitVal::_F, true); }
+    if pin.contains(GpioPinNum::GPIO_G) { ex_bits.set(GpioExBitVal::_G, true); }
+    if pin.contains(GpioPinNum::GPIO_H) { ex_bits.set(GpioExBitVal::_H, true); }
+
+    (bits, ex_bits)
+}
+
+pub(crate) fn ft260_gpio_set_dir(device: &Device, pin: GpioPinNum,  dir: GpioDir) -> Ft260Result<()> {
+    let res = ft260_gpio_get(device);
+    if let Ok(req) = res {
+        let mut req = req;
+        let (bit, ex_bit) = ft260_gpio_pin_to_bits(pin);
+        // 0: input, 1: output
+        let bit_dir = match dir {
+            GpioDir::In => false,
+            GpioDir::Out => true,
+        };
+        req.dir.set(bit, bit_dir);
+        req.ex_dir.set(ex_bit, bit_dir);
+        ft260_gpio_set(device, req)
+    } else {
+        Err(res.err().unwrap())
+    }
+}
+
+pub(crate) fn ft260_gpio_read(device: &Device, pin: GpioPinNum) -> Ft260Result<GpioValue> {
+    let res = ft260_gpio_get(device);
+    if let Ok(req) = res {
+        let (bit, ex_bit) = ft260_gpio_pin_to_bits(pin);
+        if req.val.contains(bit) || req.ex_val.contains(ex_bit) {
+            Ok(GpioValue::High)
+        } else {
+            Ok(GpioValue::Low)
+        }
+    } else {
+        Err(res.err().unwrap())
+    }
+}
+
+pub(crate) fn ft260_gpio_write(device: &Device, pin: GpioPinNum, val: GpioValue) -> Ft260Result<()> {
+    let res = ft260_gpio_get(device);
+    if let Ok(req) = res {
+        let mut req = req;
+        let (bit, ex_bit) = ft260_gpio_pin_to_bits(pin);
+        let bit_val = match val {
+            GpioValue::Low => false,
+            GpioValue::High => true,
+        };
+        req.val.set(bit, bit_val);
+        req.ex_val.set(ex_bit, bit_val);
+        ft260_gpio_set(device, req)
+    } else {
+        Err(res.err().unwrap())
+    }
+}
