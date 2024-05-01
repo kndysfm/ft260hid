@@ -1,3 +1,5 @@
+use std::time::{Instant, Duration};
+
 use bitflags::Flags;
 
 use crate::device::{Device};
@@ -239,7 +241,7 @@ pub(crate) fn ft260_i2c_master_read(device: &Device,
     flag: I2cCondition,
     buf: &mut [u8],
     byte_to_read: usize,
-    wait_timer: u32) -> Ft260Result<usize> {
+    duration_wait: Duration) -> Ft260Result<usize> {
 
     let res = i2c_read_request(device, device_address, flag, byte_to_read);
     if res.is_err() { return Err(res.err().unwrap()); }
@@ -247,10 +249,12 @@ pub(crate) fn ft260_i2c_master_read(device: &Device,
     let sz_buf = buf.len();
     let mut idx = 0usize;
     let mut byte_returned = 0usize;
+    let time_start = Instant::now();
     while byte_returned < byte_to_read {
       if get_input_reports_count_i2c(device) == 0 {
-        //TODO: check timeout 
-        continue;
+        // check timeout 
+        if (Instant::now() - time_start) >= duration_wait { break; }
+        else { continue; }
       }
       if let Some(data) = pop_input_report_i2c(device) {
         let len = data.len();
