@@ -692,22 +692,22 @@ fn ft260_gpio_get(device: &Device) -> Ft260Result<GpioRequest> {
 }
 
 fn ft260_gpio_pin_to_bits(pin: GpioPinNum) -> (GpioBitVal, GpioExBitVal) {
-    let mut bits: GpioBitVal = GpioBitVal::from_bits(0).unwrap();
-    if pin.contains(GpioPinNum::GPIO_0) { bits.set(GpioBitVal::_0, true); }
-    if pin.contains(GpioPinNum::GPIO_1) { bits.set(GpioBitVal::_1, true); }
-    if pin.contains(GpioPinNum::GPIO_2) { bits.set(GpioBitVal::_2, true); }
-    if pin.contains(GpioPinNum::GPIO_3) { bits.set(GpioBitVal::_3, true); }
-    if pin.contains(GpioPinNum::GPIO_4) { bits.set(GpioBitVal::_4, true); }
-    if pin.contains(GpioPinNum::GPIO_5) { bits.set(GpioBitVal::_5, true); }
-    let mut ex_bits: GpioExBitVal = GpioExBitVal::from_bits(0).unwrap();
-    if pin.contains(GpioPinNum::GPIO_A) { ex_bits.set(GpioExBitVal::_A, true); }
-    if pin.contains(GpioPinNum::GPIO_B) { ex_bits.set(GpioExBitVal::_B, true); }
-    if pin.contains(GpioPinNum::GPIO_C) { ex_bits.set(GpioExBitVal::_C, true); }
-    if pin.contains(GpioPinNum::GPIO_D) { ex_bits.set(GpioExBitVal::_D, true); }
-    if pin.contains(GpioPinNum::GPIO_E) { ex_bits.set(GpioExBitVal::_E, true); }
-    if pin.contains(GpioPinNum::GPIO_F) { ex_bits.set(GpioExBitVal::_F, true); }
-    if pin.contains(GpioPinNum::GPIO_G) { ex_bits.set(GpioExBitVal::_G, true); }
-    if pin.contains(GpioPinNum::GPIO_H) { ex_bits.set(GpioExBitVal::_H, true); }
+    let mut bits: GpioBitVal = GpioBitVal::None;
+    if pin.contains(GpioPinNum::GPIO_0) { bits |= GpioBitVal::_0; }
+    if pin.contains(GpioPinNum::GPIO_1) { bits |= GpioBitVal::_1; }
+    if pin.contains(GpioPinNum::GPIO_2) { bits |= GpioBitVal::_2; }
+    if pin.contains(GpioPinNum::GPIO_3) { bits |= GpioBitVal::_3; }
+    if pin.contains(GpioPinNum::GPIO_4) { bits |= GpioBitVal::_4; }
+    if pin.contains(GpioPinNum::GPIO_5) { bits |= GpioBitVal::_5; }
+    let mut ex_bits: GpioExBitVal = GpioExBitVal::None;
+    if pin.contains(GpioPinNum::GPIO_A) { ex_bits |= GpioExBitVal::_A; }
+    if pin.contains(GpioPinNum::GPIO_B) { ex_bits |= GpioExBitVal::_B; }
+    if pin.contains(GpioPinNum::GPIO_C) { ex_bits |= GpioExBitVal::_C; }
+    if pin.contains(GpioPinNum::GPIO_D) { ex_bits |= GpioExBitVal::_D; }
+    if pin.contains(GpioPinNum::GPIO_E) { ex_bits |= GpioExBitVal::_E; }
+    if pin.contains(GpioPinNum::GPIO_F) { ex_bits |= GpioExBitVal::_F; }
+    if pin.contains(GpioPinNum::GPIO_G) { ex_bits |= GpioExBitVal::_G; }
+    if pin.contains(GpioPinNum::GPIO_H) { ex_bits |= GpioExBitVal::_H; }
 
     (bits, ex_bits)
 }
@@ -734,7 +734,7 @@ pub(crate) fn ft260_gpio_read(device: &Device, pin: GpioPinNum) -> Ft260Result<G
     let res = ft260_gpio_get(device);
     if let Ok(req) = res {
         let (bit, ex_bit) = ft260_gpio_pin_to_bits(pin);
-        if req.val.contains(bit) || req.ex_val.contains(ex_bit) {
+        if req.val.intersects(bit) || req.ex_val.intersects(ex_bit) {
             Ok(GpioValue::High)
         } else {
             Ok(GpioValue::Low)

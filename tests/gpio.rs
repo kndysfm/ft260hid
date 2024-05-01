@@ -14,7 +14,6 @@ fn read_value() {
   assert!(gpio.set_dir(Pin::GpioC, Dir::In).is_ok());  // RXD / GPIOC
   assert!(gpio.set_dir(Pin::GpioD, Dir::Out).is_ok()); // TXD / GPIOD
 
-  let val: Val;
   let in_out = [
     (Pin::GpioC, Pin::GpioD),
     (Pin::GpioE, Pin::GpioB),
@@ -29,10 +28,10 @@ fn read_value() {
       thread::sleep(delay);
       let res = gpio.read(io.1); // read out
       assert!(res.is_ok()); 
-      assert!(matches!(res.unwrap(), v));
+      assert_eq!(res.unwrap(), v);
       let res = gpio.read(io.0); // read in
       assert!(res.is_ok()); 
-      assert!(matches!(res.unwrap(), v));
+      assert_eq!(res.unwrap(), v);
     }
   }
 
