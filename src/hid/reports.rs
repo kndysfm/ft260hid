@@ -320,13 +320,13 @@ pub(crate) fn ft260_i2c_master_write(device: &Device,
     }
 }
 
-pub(crate) fn ft260_i2c_master_get_status(device: &Device) -> Ft260Result<u8> {
+pub(crate) fn ft260_i2c_master_get_status(device: &Device) -> Ft260Result<I2cBusStatus> {
     let mut buf = [0u8; 64];
     buf[0] = ReportId::FeatI2cStatus as u8;
     let res = device.get_feature(&mut buf);
     if let Ok(sz) = res {
         if sz > 2 && buf[0] == (ReportId::FeatI2cStatus as u8) {
-            Ok(buf[1])
+            Ok(I2cBusStatus::from_bits(buf[1]).unwrap())
         } else {
             Err(Ft260Error::HidError { message: "HID Feature I2C Status was not returned".to_string() })
         }

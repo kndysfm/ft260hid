@@ -10,6 +10,12 @@ pub enum Ft260Error {
     value: u8,
     message: String,
   },
+  I2cError {
+    message: String,
+  },
+  UartError {
+    message: String,
+  },
   OtherError {
     error: std::io::Error,
   },
@@ -24,6 +30,12 @@ impl Display for Ft260Error {
       Self::ByteError { value, message } => {
         write!(f, "byte data error - `{:#x}`: {}", value, message)
       }
+      Self::I2cError { message } => {
+        write!(f, "ft260 I2C error: {}", message)
+      },
+      Self::UartError { message } => {
+        write!(f, "ft260 UART error: {}", message)
+      },
       Self::OtherError { error } => {
         write!(f, "{error}")
       },
