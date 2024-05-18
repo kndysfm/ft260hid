@@ -7,6 +7,30 @@ use bitflags::bitflags;
 
 use crate::{Ft260Error, Ft260Result};
 
+// see "https://stackoverflow.com/questions/28028854/how-do-i-match-enum-values-with-an-integer"
+macro_rules! back_to_enum {
+    ($(#[$meta:meta])* $vis:vis enum $name:ident {
+        $($(#[$vmeta:meta])* $vname:ident $(= $val:expr)?,)*
+    }) => {
+        $(#[$meta])*
+        $vis enum $name {
+            $($(#[$vmeta])* $vname $(= $val)?,)*
+        }
+
+        impl std::convert::TryFrom<u8> for $name {
+            type Error = Ft260Error;
+            fn try_from(v: u8) -> Result<Self, Self::Error> {
+                match v {
+                    $(x if x == $name::$vname as u8 => Ok($name::$vname),)*
+                    _ => Err(Ft260Error::ByteError { 
+                                value: v, 
+                                message: "Failed converting byte into enum value".to_string() }),
+                }
+            }
+        }
+    }
+}
+
 #[repr(u8)]
 pub(crate) enum Ft260Status
 {
@@ -71,6 +95,7 @@ pub(crate) enum I2cEnableMode
     Enabled = 1,
 }
 
+back_to_enum! {
 #[repr(u8)]
 pub(crate) enum UartEnableMode
 {
@@ -80,6 +105,7 @@ pub(crate) enum UartEnableMode
     XonXoff = 3,
     NoFlowControl = 4,
 }
+}
 
 #[repr(u8)]
 pub(crate) enum HidOverI2cEnableMode
@@ -88,11 +114,13 @@ pub(crate) enum HidOverI2cEnableMode
     Configured = 1,
 }
 
+back_to_enum! {
 #[repr(u8)]
 pub(crate) enum UartDcdRiEnableMode
 {
     Disabled = 0,
     Enabled = 1,
+}
 }
 
 /// Pin configuration of DIO7
@@ -174,6 +202,7 @@ pub(crate) enum PowerSavingEnableMode
     Enable = 1,
 }
 
+back_to_enum! {
 #[repr(u8)]
 pub(crate) enum UartParity
 {
@@ -183,24 +212,33 @@ pub(crate) enum UartParity
     High = 3, // parity bit is always high
     Low = 4, // parity bit is always low
 }
+}
 
+back_to_enum! {
 #[repr(u8)]
 pub(crate) enum UartStopBit
 {
     One = 0,
     Two = 2,
 }
+}
+
+back_to_enum! {
 #[repr(u8)]
 pub(crate) enum UartBreaking
 {
     NoBreak = 0,
     Break = 1,
 }
+}
+
+back_to_enum! {
 #[repr(u8)]
 pub(crate) enum UartDataBits
 {
     Seven = 7,
     Eight = 8,
+}
 }
 
 bitflags! {
@@ -264,7 +302,7 @@ pub(crate) enum Request
     ResetUart = 0x40,
     ConfigureUart = 0x41,
     SetUartBaudRate = 0x42,
-    SetUartDataBit = 0x43,
+    SetUartDataBits = 0x43,
     SetUartParity = 0x44,
     SetUartStopBit = 0x45,
     SetUartBreaking = 0x46,
@@ -429,29 +467,6 @@ bitflags! {
   {
     const Dcd  = 1;
     const Ri  = 2;
-  }
-}
-
-// see "https://stackoverflow.com/questions/28028854/how-do-i-match-enum-values-with-an-integer"
-macro_rules! back_to_enum {
-  ($(#[$meta:meta])* $vis:vis enum $name:ident {
-      $($(#[$vmeta:meta])* $vname:ident $(= $val:expr)?,)*
-  }) => {
-      $(#[$meta])*
-      $vis enum $name {
-          $($(#[$vmeta])* $vname $(= $val)?,)*
-      }
-
-      impl std::convert::TryFrom<u8> for $name {
-          type Error = ();
-
-          fn try_from(v: u8) -> Result<Self, Self::Error> {
-              match v {
-                  $(x if x == $name::$vname as u8 => Ok($name::$vname),)*
-                  _ => Err(()),
-              }
-          }
-      }
   }
 }
 

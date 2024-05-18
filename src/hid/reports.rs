@@ -343,291 +343,275 @@ pub(crate) fn ft260_i2c_master_reset(device: &Device) -> Ft260Result<()> {
     ft260_set_request(device, Request::ResetI2c)
 }
 
-/* //
 
-pub(crate) FT260_STATUS FT260_UART_Init(device: &Device) -> Ft260Result<()> {}
-{
-    const uint BaudDefault = 115200;
-    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::ConfigureUart,
-        (byte)UartEnableMode.DtrDsr,
-        (byte)((BaudDefault >> 0) & 0xFF),
-        (byte)((BaudDefault >> 8) & 0xFF),
-        (byte)((BaudDefault >> 16) & 0xFF),
-        (byte)((BaudDefault >> 24) & 0xFF),
-        (byte)UartDataBits.Eight,
-        (byte)UartParity.None,
-        (byte)UartStopBit.One,
-        (byte)UartBreaking.NoBreak);
+pub(crate) fn ft260_uart_init(device: &Device) -> Ft260Result<()> {
+    const BAUD_DEFAULT: u32 = 115200;
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::ConfigureUart as u8;
+    buf[2] = UartEnableMode::DtrDsr as u8;
+    buf[3] = ((BAUD_DEFAULT >> 0) & 0xFF) as u8;
+    buf[4] = ((BAUD_DEFAULT >> 8) & 0xFF) as u8;
+    buf[5] = ((BAUD_DEFAULT >> 16) & 0xFF) as u8;
+    buf[6] = ((BAUD_DEFAULT >> 24) & 0xFF) as u8;
+    buf[7] = UartDataBits::Eight as u8;
+    buf[8] = UartParity::None as u8;
+    buf[9] = UartStopBit::One as u8;
+    buf[10] = UartBreaking::NoBreak as u8;
+    device.set_feature(&buf)
 }
 
-pub(crate) fn FT260_UART_SetBaudRate(device: &Device, baudRate: uint) -> Ft260Result<()> {}
-{
-    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::SetUartBaudRate,
-        (byte)((baudRate >> 0) & 0xFF),
-        (byte)((baudRate >> 8) & 0xFF),
-        (byte)((baudRate >> 16) & 0xFF),
-        (byte)((baudRate >> 24) & 0xFF));
+pub(crate) fn ft260_uart_set_baud_rate(device: &Device, baud_rate: u32) -> Ft260Result<()> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::SetUartBaudRate as u8;
+    buf[2] = ((baud_rate >> 0) & 0xFF) as u8;
+    buf[3] = ((baud_rate >> 8) & 0xFF) as u8;
+    buf[4] = ((baud_rate >> 16) & 0xFF) as u8;
+    buf[5] = ((baud_rate >> 24) & 0xFF) as u8;
+    device.set_feature(&buf)
 }
 
-pub(crate) fn FT260_UART_SetFlowControl(device: &Device, flowControl: UartEnableMode) -> Ft260Result<()> {}
-{
-    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::SetUartMode, (byte)flowControl);
+pub(crate) fn ft260_uart_set_flow_control(device: &Device, flow_control: UartEnableMode) -> Ft260Result<()> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::SetUartMode as u8;
+    buf[2] = flow_control as u8;
+    device.set_feature(&buf)
 }
 
-pub(crate) FT260_STATUS FT260_UART_SetDataCharacteristics(device: &Device,
-    dataBits: UartDataBits
-    stopBits: UartStopBit
-    parity: UartParity)
-{
-    let res = setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::SetUartDataBit, (byte)dataBits);
-    if (res != FT260_STATUS.OK) return res;
-    res = setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::SetUartStopBit, (byte)stopBits);
-    if (res != FT260_STATUS.OK) return res;
-    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
-                    (byte)Request::SetUartParity, (byte)parity);
+pub(crate) fn t260_uart_set_data_bits(device: &Device, data_bits: UartDataBits) -> Ft260Result<()> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::SetUartDataBits as u8;
+    buf[2] = data_bits as u8;
+    device.set_feature(&buf)
+}
+pub(crate) fn ft260_uart_set_stop_bit(device: &Device, stop_bit: UartStopBit) -> Ft260Result<()> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::SetUartStopBit as u8;
+    buf[2] = stop_bit as u8;
+    device.set_feature(&buf)
+}
+pub(crate) fn ft260_uart_set_parity(device: &Device, parity: UartParity) -> Ft260Result<()> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::SetUartParity as u8;
+    buf[2] = parity as u8;
+    device.set_feature(&buf)
 }
 
-pub(crate) FT260_STATUS FT260_UART_SetBreakOn(device: &Device) -> Ft260Result<()> {}
-{
-    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::SetUartBreaking, (byte)UartBreaking.Break);
+pub(crate) fn ft260_uart_set_break_on(device: &Device, breaking: UartBreaking) -> Ft260Result<()> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::SetUartBreaking as u8;
+    buf[2] = breaking as u8;
+    device.set_feature(&buf)
 }
 
-pub(crate) FT260_STATUS FT260_UART_SetBreakOff(device: &Device) -> Ft260Result<()> {}
-{
-    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::SetUartBreaking, (byte)UartBreaking.NoBreak);
-}
-
-pub(crate) FT260_STATUS FT260_UART_SetXonXoffChar(device: &Device,
-    Xon: u8, Xoff: u8)
-{
-    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::SetUartXonXoff, Xon, Xoff);
+pub(crate) fn ft260_uart_set_xon_xoff_char(device: &Device, x_on: u8, x_off: u8) -> Ft260Result<()> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::SetUartXonXoff as u8;
+    buf[2] = x_on;
+    buf[2] = x_off;
+    device.set_feature(&buf)
 }
 
 pub(crate) struct UartConfig
 {
-    pub(crate) UartEnableMode Mode;
-    pub(crate) uint BaudRate;
-    pub(crate) UartDataBits DataBits;
-    pub(crate) UartParity Parity;
-    pub(crate) UartStopBit StopBit;
-    pub(crate) UartBreaking Breaking;
+    pub(crate) mode: UartEnableMode,
+    pub(crate) baud_rate: u32,
+    pub(crate) data_bits: UartDataBits,
+    pub(crate) parity: UartParity,
+    pub(crate) stop_bit: UartStopBit,
+    pub(crate) breaking: UartBreaking,
 }
 
-pub(crate) FT260_STATUS FT260_UART_GetConfig(device: &Device, out pUartConfig: UartConfig)
-{
-    pUartConfig = new UartConfig();
-    if (getFeature(hid, ReportId::FeatUartStatus, out &[u8] dat) &&
-        dat[0] == (byte)ReportId::FeatUartStatus)
-    {
-        pUartConfig.Mode = (UartEnableMode)dat[1];
-        pUartConfig.BaudRate = (uint)((dat[5] << 24) | (dat[4] << 16) | (dat[3] << 8) | (dat[2] << 0));
-        pUartConfig.DataBits = (UartDataBits)dat[6];
-        pUartConfig.Parity = (UartParity)dat[7];
-        pUartConfig.StopBit = (UartStopBit)dat[8];
-        pUartConfig.Breaking = (UartBreaking)dat[9];
-        return FT260_STATUS.OK;
+pub(crate) fn ft260_uart_get_config(device: &Device) -> Ft260Result<UartConfig> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatUartStatus as u8;
+    if let Err(e) = device.get_feature(&mut buf) {
+        return Err(e);
     }
-    return FT260_STATUS.OTHER_ERROR;
+    let mode = UartEnableMode::try_from(buf[1]);
+    let data_bits = UartDataBits::try_from(buf[5]);
+    let parity = UartParity::try_from(buf[6]);
+    let stop_bit = UartStopBit::try_from(buf[7]);
+    let breaking = UartBreaking::try_from(buf[8]);
+    if let Err(e) = mode { return Err(e); }
+    if let Err(e) = data_bits { return Err(e); }
+    if let Err(e) = parity { return Err(e); }
+    if let Err(e) = stop_bit { return Err(e); }
+    if let Err(e) = breaking { return Err(e); }
+
+    let mode = mode.unwrap();
+    let baud_rate = ((buf[5] as u32) << 24) | ((buf[4] as u32) << 16) | ((buf[3] as u32) << 8) | ((buf[2] as u32) << 0);
+    let data_bits = data_bits.unwrap();
+    let parity = parity.unwrap();
+    let stop_bit = stop_bit.unwrap();
+    let breaking = breaking.unwrap();
+
+    Ok(UartConfig {mode, baud_rate, data_bits, parity, stop_bit, breaking})
 }
 
-pub(crate) FT260_STATUS FT260_UART_GetQueueStatus(device: &Device,
-    out lpdwAmountInRxQueue: uint)
-{
-    Debug.Assert(IsAsyncReadMode, "UART requires asynchronous read of HidDevice.");
-    lpdwAmountInRxQueue = (uint)GetInputReportByteAmountUart();
-    return FT260_STATUS.OK;
+pub(crate) fn ft260_uart_get_queue_status(device: &Device) -> Ft260Result<usize> {
+    Ok(get_input_report_byte_amount_uart(device))
 }
 
-ReportId DecideUartReportId(length: u8)
-{
-    if (length <= 0x04) return ReportId::InOutUartReport04;
-    if (length <= 0x08) return ReportId::InOutUartReport08;
-    if (length <= 0x0C) return ReportId::InOutUartReport0C;
-    if (length <= 0x10) return ReportId::InOutUartReport10;
-    if (length <= 0x14) return ReportId::InOutUartReport14;
-    if (length <= 0x18) return ReportId::InOutUartReport18;
-    if (length <= 0x1C) return ReportId::InOutUartReport1C;
-    if (length <= 0x20) return ReportId::InOutUartReport20;
-    if (length <= 0x24) return ReportId::InOutUartReport24;
-    if (length <= 0x28) return ReportId::InOutUartReport28;
-    if (length <= 0x2C) return ReportId::InOutUartReport2C;
-    if (length <= 0x30) return ReportId::InOutUartReport30;
-    if (length <= 0x34) return ReportId::InOutUartReport34;
-    if (length <= 0x38) return ReportId::InOutUartReport38;
-    if (length <= 0x3C) return ReportId::InOutUartReport3C;
-    else return ReportId::InOutI2cReportOverflow;
+fn decide_uart_report_id(length: usize) -> ReportId {
+    if length <= 0x04 { return ReportId::InOutUartReport04; }
+    if length <= 0x08 { return ReportId::InOutUartReport08; }
+    if length <= 0x0C { return ReportId::InOutUartReport0C; }
+    if length <= 0x10 { return ReportId::InOutUartReport10; }
+    if length <= 0x14 { return ReportId::InOutUartReport14; }
+    if length <= 0x18 { return ReportId::InOutUartReport18; }
+    if length <= 0x1C { return ReportId::InOutUartReport1C; }
+    if length <= 0x20 { return ReportId::InOutUartReport20; }
+    if length <= 0x24 { return ReportId::InOutUartReport24; }
+    if length <= 0x28 { return ReportId::InOutUartReport28; }
+    if length <= 0x2C { return ReportId::InOutUartReport2C; }
+    if length <= 0x30 { return ReportId::InOutUartReport30; }
+    if length <= 0x34 { return ReportId::InOutUartReport34; }
+    if length <= 0x38 { return ReportId::InOutUartReport38; }
+    if length <= 0x3C { return ReportId::InOutUartReport3C; }
+    else { return ReportId::InOutUartReportOverflow; }
 }
 
-const byte UartPayloadSizeMax = 0x3C;
+const UART_PAYLOAD_SIZE_MAX: usize = 0x3C;
 
-byte DecideUartPayloadSize(id: ReportId)
-{
-    switch (id)
-    {
-        case ReportId::InOutUartReport04: return 0x04;
-        case ReportId::InOutUartReport08: return 0x08;
-        case ReportId::InOutUartReport0C: return 0x0C;
-        case ReportId::InOutUartReport10: return 0x10;
-        case ReportId::InOutUartReport14: return 0x14;
-        case ReportId::InOutUartReport18: return 0x18;
-        case ReportId::InOutUartReport1C: return 0x1C;
-        case ReportId::InOutUartReport20: return 0x20;
-        case ReportId::InOutUartReport24: return 0x24;
-        case ReportId::InOutUartReport28: return 0x28;
-        case ReportId::InOutUartReport2C: return 0x2C;
-        case ReportId::InOutUartReport30: return 0x30;
-        case ReportId::InOutUartReport34: return 0x34;
-        case ReportId::InOutUartReport38: return 0x38;
-        case ReportId::InOutUartReport3C: return 0x3C;
-        default: return 0;
+fn decide_uart_payload_size(id: ReportId) -> usize {
+    match id {
+        ReportId::InOutUartReport04 => 0x04,
+        ReportId::InOutUartReport08 => 0x08,
+        ReportId::InOutUartReport0C => 0x0C,
+        ReportId::InOutUartReport10 => 0x10,
+        ReportId::InOutUartReport14 => 0x14,
+        ReportId::InOutUartReport18 => 0x18,
+        ReportId::InOutUartReport1C => 0x1C,
+        ReportId::InOutUartReport20 => 0x20,
+        ReportId::InOutUartReport24 => 0x24,
+        ReportId::InOutUartReport28 => 0x28,
+        ReportId::InOutUartReport2C => 0x2C,
+        ReportId::InOutUartReport30 => 0x30,
+        ReportId::InOutUartReport34 => 0x34,
+        ReportId::InOutUartReport38 => 0x38,
+        ReportId::InOutUartReport3C => 0x3C,
+        _ => 0x00,
     }
 }
 
-bool UartWriteRequest(device: &Device, reportId: ReportId, length: u8, data: &[u8])
-{
-    Debug.Assert(length <= data.Length);
-
-    let buf = new byte[length + 2];
-    buf[0] = (byte)reportId;
-    buf[1] = length;
-    Array.Copy(data, 0, buf, 2, length);
-    return hid.Write(buf);
+fn uart_write_request(device: &Device, report_id: ReportId, src: &[u8], len_src: usize) -> Ft260Result<()> {
+    let mut buf = [0u8; 64];
+    buf[0] = report_id as u8;
+    buf[1] = len_src as u8;
+    for i in 0..len_src {
+        buf[2+i] = src[i];
+    }
+    device.write_output(&buf)
 }
 
-pub(crate) FT260_STATUS FT260_UART_Read(device: &Device,
+pub(crate) fn ft260_uart_read(device: &Device,
+    buf: &mut [u8],
+    byte_to_read: usize,
+    duration_wait: Duration) -> Ft260Result<usize> {
+        
+    let sz_buf = buf.len();
+    let mut idx = 0usize;
+    let mut byte_returned = 0usize;
+    let time_start = Instant::now();
+    while byte_returned < byte_to_read {
+        if get_input_reports_count_uart(device) == 0 {
+            // check timeout 
+            if (Instant::now() - time_start) >= duration_wait { break; }
+            else { continue; }
+        }
+
+        if let Some(data) = pop_input_report_uart(device) {
+            let len = data.len();
+            if len < 2 { continue; } // error
+            if let Ok(rep_id) = data[0].try_into() {
+                let sz_from_id = decide_uart_payload_size(rep_id);
+                if sz_from_id == 0 || sz_from_id > len - 2 { continue; } // error
+                let len_in_rep = data[1] as usize;
+                if len_in_rep > sz_from_id { continue; } // error
+                let sz_cpy = if len_in_rep < sz_buf - idx { len_in_rep } else {sz_buf - idx};
+                for i in 0..sz_cpy { buf[idx + i] = data[2 + i]; }
+                byte_returned += sz_cpy;
+                idx += sz_cpy;
+            } else {
+                return Err(Ft260Error::HidError { 
+                    message: format!("Unknown Report ID {} detected", data[0]) })
+            }
+        }
+    }
+    Ok(byte_returned)
+}
+
+pub(crate) fn ft260_uart_write(device: &Device,
     buf: &[u8],
-    dwBufferLength: uint,
-    byte_to_read: uint,
-    out lpdwBytesReturned: uint)
-{
-    Debug.Assert(IsAsyncReadMode, "UART requires asynchronous read of HidDevice.");
-    Debug.Assert(buf.Length >= byte_to_read);
-
-    lpdwBytesReturned = 0;
-    int idx = 0;
-    while (lpdwBytesReturned < byte_to_read)
-    {
-        if (GetInputReportsCountUart() == 0)
-        {
-            break;
+    byte_to_write: usize) -> Ft260Result<usize> {
+    let mut byte_written = 0usize;
+    let mut byte_remained = byte_to_write;
+    
+    loop {
+        let size_write = if byte_remained > UART_PAYLOAD_SIZE_MAX { UART_PAYLOAD_SIZE_MAX } else { byte_remained};
+        let rid = decide_uart_report_id(size_write);
+        let mut slice = [0u8; 64];
+        for i in 0..size_write { slice[i] = buf[byte_written + i]; }
+        byte_remained -= size_write;
+        let res = uart_write_request(device, rid, &slice, size_write);
+        if let Ok(_) = res {
+            byte_written += size_write;
+            if byte_remained <= 0 {
+                return Ok(byte_written);
+            } else {
+                continue;
+            }
+        } else {
+            return Err(res.err().unwrap());
         }
-
-        let data = PopInputReportUart();
-        if (data.Length < 2)
-        {
-            Debug.WriteLine($"[{GetCurrentMethod().Name}] Input report is too short (length = {data.Length})");
-            return FT260_STATUS.OTHER_ERROR;
-        }
-        let size = DecideUartPayloadSize((ReportId)data[0]);
-        if (size == 0 || size > data.Length - 2)
-        { // other report ID, ignore it
-            Debug.WriteLine($"[{GetCurrentMethod().Name}] Wrong report ID 0x{data[0]:X2}");
-            return FT260_STATUS.OTHER_ERROR;
-        }
-        let len = data[1];
-        if (data.Length < len + 2)
-        {
-            Debug.WriteLine($"[{GetCurrentMethod().Name}] Input report is too short (decl = {len}, actual = {data.Length - 2})");
-            return FT260_STATUS.OTHER_ERROR;
-        }
-        let sz = Math.Min(buf.Length - idx, len);
-        Array.Copy(data, 2, buf, idx, sz);
-        lpdwBytesReturned += (uint)sz;
-        idx += sz;
     }
-
-    return FT260_STATUS.OK;
 }
 
-pub(crate) FT260_STATUS FT260_UART_Write(device: &Device,
-    buf: &[u8],
-    dwBufferLength: uint,
-    byte_to_write: uint,
-    out lpdwBytesWritten: uint)
-{
-    Debug.Assert(buf.Length >= byte_to_write);
-    Debug.Assert(buf.Length >= dwBufferLength);
+pub(crate) fn ft260_uart_reset(device: &Device) -> Ft260Result<()> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::ResetUart as u8;
+    device.set_feature(&buf)
+}
 
-    uint written = 0;
-    uint remained = byte_to_write;
-
-    while (remained > 0)
-    {
-        byte size;
-        if (remained > UartPayloadSizeMax)
-        {
-            size = UartPayloadSizeMax;
-        }
-        else
-        {   // it's the last output report
-            size = (byte)remained;
-        }
-        let rid = DecideUartReportId(size);
-        Debug.Assert(0xF0 <= (byte)rid && (byte)rid <= 0xFE);
-        let slice = new byte[size];
-        Array.Copy(buf, written, slice, 0, size);
-        remained -= size;
-        let res = UartWriteRequest(hid, rid, size, slice);
-        Thread.Yield();
-        if (!res)
-        {
-            Debug.WriteLine($"[{GetCurrentMethod().Name}] Fail to write HID output report");
-            lpdwBytesWritten = written;
-            return FT260_STATUS.IO_ERROR;
-        }
-        else
-        {
-            Debug.WriteLine($"[{GetCurrentMethod().Name}] Succeed to write {size} bytes payload");
-        }
-        written += size;
+pub(crate) fn ft260_uart_get_dcd_ri_status(device: &Device) -> Ft260Result<UartDcdRiStatus> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatUartRiAndDcdStatus as u8;
+    if let Err(e) = device.get_feature(&mut buf) {
+        return Err(e);
     }
-
-    lpdwBytesWritten = written;
-    return FT260_STATUS.OK;
-}
-
-pub(crate) FT260_STATUS FT260_UART_Reset(device: &Device) -> Ft260Result<()> {}
-{
-    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::ResetUart);
-}
-
-pub(crate) FT260_STATUS FT260_UART_GetDcdRiStatus(device: &Device,
-    out value: UartDcdRiStatus)
-{
-    if (getFeature(hid, ReportId::FeatUartRiAndDcdStatus, out &[u8] dat) &&
-        dat[0] == (byte)ReportId::FeatUartRiAndDcdStatus)
-    {
-        value = (UartDcdRiStatus)dat[1];
-        return FT260_STATUS.OK;
+    if let Some(s) = UartDcdRiStatus::from_bits(buf[1]) {
+        Ok(s)
+    } else {
+        Err(Ft260Error::ByteError { value: buf[1], message: "Couldn't get valid `UartDcdRiStatus` value".to_string() })
     }
-    value = 0;
-    return FT260_STATUS.OTHER_ERROR;
 }
 
-pub(crate) fn FT260_UART_EnableRiWakeup(device: &Device, enable: WakeupIntEnableMode) -> Ft260Result<()> {}
-{
-    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::EnableUartRiWaveup, (byte)enable);
+pub(crate) fn ft260_uart_enable_ri_wakeup(device: &Device, enable: WakeupIntEnableMode) -> Ft260Result<()> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::EnableUartRiWaveup as u8;
+    buf[2] = enable as u8;
+    device.set_feature(&buf)
 }
 
-pub(crate) FT260_STATUS FT260_UART_SetRiWakeupConfig(device: &Device,
-    type: UartRiWakeupConfig)
-{
-    return setFeature(hid, (byte)ReportId::FeatSystemSetting,
-        (byte)Request::SetUartRiWakeupConfig, (byte)type);
+pub(crate) fn ft260_uart_set_ri_wakeup_config(device: &Device, config: UartRiWakeupConfig) -> Ft260Result<()> {
+    let mut buf = [0u8, 64];
+    buf[0] = ReportId::FeatSystemSetting as u8;
+    buf[1] = Request::SetUartRiWakeupConfig as u8;
+    buf[2] = config as u8;
+    device.set_feature(&buf)
 }
 
-
-
+/*
 
 pub(crate) bool InterruptFlag = false;
 
