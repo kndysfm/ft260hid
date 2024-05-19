@@ -33,6 +33,8 @@ impl From<HidError> for Ft260Error {
     }
 }
 
+/// Data struct for FT260 device
+
 #[derive(Debug)]
 pub struct Device {
     hid: Arc<Mutex<hidapi::HidDevice>>,
@@ -41,18 +43,27 @@ pub struct Device {
     handle: JoinHandle<()>,
 }
 
+/// Default USB Vendor ID for FT260 device
 pub const VID_DEFAULT: u16 = 0x0403;
+/// Default USB Product ID for FT260 device
 pub const PID_DEFAULT: u16 = 0x6030;
 
+/// Open FT260 HID interface with its number.  
+/// `interface` should take `0` or `1` only.  
+/// If it could be opened, a new thread is spawned and it continues to read HID input report from it.
 pub fn open(interface: i32) -> Option<Device> {
     open_by_vid_pid(VID_DEFAULT, PID_DEFAULT, interface)
 }
 
+/// Open FT260 HID by explicit Vendor ID and Product ID.  
+/// `interface` should take `0` or `1` only.
 pub fn open_by_vid_pid(vendor_id: u16, product_id: u16, interface: i32) -> Option<Device> {
     Device::try_new(vendor_id, product_id, interface, 0) // try find only the first one
 }
 
 impl Device {
+    /// Create new `Device` instance from `hidapi::HidDevice` instance.  
+    /// When it is opened, a new thread is spawned and it continues to read HID input report from the device.
     fn new(hid: hidapi::HidDevice) -> Self {
         dbg!(&hid);
         let mutex_hid = Arc::new(Mutex::new(hid));
@@ -94,6 +105,8 @@ impl Device {
         }
     }
 
+    /// Enumerate HID interfaces with specified conditions (VID, PID, IF#)  
+    /// If some were found, then create new `Device` instance from `hidapi::HidDevice` instance
     fn try_new(vendor_id: u16, product_id: u16, interface: i32, index: usize) -> Option<Self> {
         if interface < 0 || interface > 1 {
             return None;
@@ -124,22 +137,27 @@ impl Device {
         }
     }
 
+    /// Exclusive reference to FIFO instance for HID input report from FT260 device
     pub(crate) fn fifo<'a>(&'a self) -> MutexGuard<'a, ReportFifo> {
         self.fifo.lock().unwrap()
     }
 
+    /// Create instance to control GPIO features
     pub fn gpio(&self) -> Gpio {
         Gpio::new(self)
     }
 
+    /// Create instance to control I2C features
     pub fn i2c(&self) -> I2c {
         I2c::new(self)
     }
 
+    /// Create instance to control UART features
     pub fn uart(&self) -> Uart {
         Uart::new(self)
     }
 
+    /// Read input report manually
     pub(crate) fn read_input(&self, buf: &mut [u8], timeout: i32) -> Ft260Result<usize> {
         match self.hid.lock().unwrap().read_timeout(buf, timeout) {
             Ok(sz) => Ft260Result::Ok(sz),
@@ -147,6 +165,7 @@ impl Device {
         }
     }
 
+    /// Write HID output report manually
     pub(crate) fn write_output(&self, data: &[u8]) -> Ft260Result<()> {
         match self.hid.lock().unwrap().write(data) {
             Ok(_) => Ft260Result::Ok(()),
@@ -154,6 +173,7 @@ impl Device {
         }
     }
 
+    /// Read HID feature report
     pub(crate) fn get_feature(&self, buf: &mut [u8]) -> Ft260Result<usize> {
         match self.hid.lock().unwrap().get_feature_report(buf) {
             Ok(sz) => Ft260Result::Ok(sz),
@@ -161,6 +181,7 @@ impl Device {
         }
     }
 
+    /// Write HID feature report
     pub(crate) fn set_feature(&self, data: &[u8]) -> Ft260Result<()> {
         match self.hid.lock().unwrap().send_feature_report(data) {
             Ok(_) => Ft260Result::Ok(()),

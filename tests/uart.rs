@@ -34,8 +34,6 @@ fn test_uart_cfg() {
     assert!(res.is_ok());
     let cfg_read = res.unwrap();
     assert_eq!(cfg, cfg_read);
-
-    assert!(uart.reset().is_ok());
 }
 
 #[test]
@@ -53,7 +51,7 @@ fn test_uart_tx_rx() {
     for len in len_list {
         thread_rng().fill(&mut buf_tx);
 
-        let size_in_fifo = uart.get_amount_in_rx_fifo();
+        let size_in_fifo = uart.size_to_read();
         assert_eq!(0usize, size_in_fifo);
 
         let res = uart.write(&buf_tx, len);
@@ -63,7 +61,7 @@ fn test_uart_tx_rx() {
 
         // to wait enqueuing RX data buffer via shorted TXD pin
         thread::sleep(Duration::from_millis(len as u64));
-        let size_in_fifo = uart.get_amount_in_rx_fifo();
+        let size_in_fifo = uart.size_to_read();
         assert_eq!(len, size_in_fifo);
 
         let mut buf_rx = [0u8; 256];
@@ -76,6 +74,4 @@ fn test_uart_tx_rx() {
             assert_eq!(buf_rx[i], buf_tx[i]);
         }
     }
-
-    assert!(uart.reset().is_ok());
 }

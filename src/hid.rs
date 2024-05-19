@@ -1,3 +1,3 @@
-pub mod consts;
-pub mod rep_fifo;
-pub mod reports;
+pub(crate) mod consts;
+pub(crate) mod rep_fifo;
+pub(crate) mod reports;

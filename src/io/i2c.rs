@@ -5,34 +5,46 @@ use crate::hid::reports;
 use crate::io::gpio;
 use crate::{device::Device, Ft260Error, Ft260Result};
 
+/// Interface type to use I2C function of the FT2260 device.
 #[derive(Debug)]
 pub struct I2c<'a> {
     device: &'a Device,
     inited: bool,
 }
 
+/// Flags to indicate I2C bus conditions
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Flag {
+    /// Normal condition
     None,
+    /// START condition
     Start,
+    /// Repeated START condition
     ReStart,
+    /// STOP condition
     Stop,
+    /// START and STOP
     StartAndStop,
+    /// Repeated START and STOP
     ReStartAndStop,
 }
 
+/// Default I2C clock speed value
 pub const KBPS_DEFAULT: u16 = 100;
 
+/// Default timeout duration
 pub const DURATION_WAIT_DEFAULT: Duration = Duration::from_millis(5000);
 
 impl<'a> I2c<'a> {
-    pub fn new(device: &'a Device) -> Self {
+    /// create a new `I2c` instance
+    pub(crate) fn new(device: &'a Device) -> Self {
         Self {
             device,
             inited: false,
         }
     }
 
+    /// Initialize I2C function with clock speed
     pub fn init(&mut self, kbps: u16) -> Ft260Result<()> {
         let gpio = self.device.gpio();
         if let Err(e) = gpio.disable_pin(gpio::Group::Gpio_0_1) {
@@ -59,6 +71,7 @@ impl<'a> I2c<'a> {
         }
     }
 
+    /// Read I2C data
     pub fn read(
         &self,
         addr: u8,
@@ -78,11 +91,13 @@ impl<'a> I2c<'a> {
         )
     }
 
+    /// Write I2C data
     pub fn write(&self, addr: u8, flag: Flag, buf: &[u8], len: usize) -> Ft260Result<usize> {
         assert!(self.inited);
         reports::i2c::write(self.device, addr, Self::flag_to_cond(flag), buf, len)
     }
 
+    /// Write and read I2C data
     pub fn write_read(
         &self,
         addr: u8,
@@ -150,6 +165,7 @@ impl<'a> I2c<'a> {
         Ok(())
     }
 
+    /// If I2C bus is idling or busy
     pub fn is_idle(&self) -> Option<bool> {
         match reports::i2c::get_status(self.device) {
             Ok(s) => Some(s == I2cBusStatus::ControllerIdle),

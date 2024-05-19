@@ -35,21 +35,27 @@ macro_rules! hid_const_compatible {
 }
 }
 
-/// UART Flow Control Mode
 hid_const_compatible! {
   UartEnableMode,
+  /// UART Flow Control Mode
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
   pub enum Mode {
+    /// > "OFF, and switch UART pins to GPIO"
     Off,
+    /// > "RTS_CTS mode (GPIOB =>RTSN, GPIOE =>CTSN)"
     RtsCts,
+    /// > "DTR_DSR mode (GPIOF =>DTRN, GPIOH => DSRN)"
     DtrDsr,
+    /// > "XON_XOFF (software flow control)"
     XonXoff,
+    /// > "No flow control mode"
     NoFlowControl,
   }
 }
 
 hid_const_compatible! {
   UartDcdRiEnableMode,
+  /// UART DCD & RI mode
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
   pub enum DcdRi {
     Disabled,
@@ -59,55 +65,78 @@ hid_const_compatible! {
 
 hid_const_compatible! {
   UartParity,
+  /// UART Parity mode
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
   pub enum Parity {
+    /// No parity
     None,
+    /// Odd parity
     Odd,
+    /// Even parity
     Even,
-    High, // parity bit is always high
-    Low, // parity bit is always low
+    /// Parity bit is always high
+    High,
+    /// Parity bit is always low
+    Low,
   }
 }
 
 hid_const_compatible! {
   UartStopBit,
+  /// Stop bit
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
   pub enum StopBit {
+      /// one stop bit
       One,
+      /// two stop bits
       Two,
   }
 }
 
 hid_const_compatible! {
   UartBreaking,
+  /// > "When active the TXD line goes into ‘spacing’ state which causes a break in the receiving UART."
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
   pub enum Breaking {
+      /// No break
       NoBreak,
+      /// Break
       Break,
   }
 }
 
 hid_const_compatible! {
   UartDataBits,
+  /// The number of UART data bits
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]
   pub enum DataBits {
+      /// 7 data bits
       Seven,
+      /// 8 data bits
       Eight,
   }
 }
 
+/// Parameters set to configure UART function
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Config {
+    /// Flow control mode
     pub mode: Mode,
+    /// UART Baud rate
     pub baud: u32,
+    /// Data bits
     pub data_bits: DataBits,
+    /// Stop bit
     pub stop_bit: StopBit,
+    /// Parity mode
     pub parity: Parity,
+    /// Breaking mode
     pub breaking: Breaking,
 }
 
+/// Default UART Baud rate value
 pub const BAUD_DEFAULT: u32 = 115200;
-
+/// Default timeout duration
 pub const DURATION_WAIT_DEFAULT: Duration = Duration::from_millis(5000);
 
 impl Config {
@@ -133,6 +162,7 @@ impl Config {
     }
 }
 
+/// Interface type to use UART function of the FT2260 device.
 #[derive(Debug)]
 pub struct Uart<'a> {
     device: &'a Device,
@@ -148,28 +178,32 @@ macro_rules! dbg_write {
 }
 
 impl<'a> Uart<'a> {
-    pub fn new(device: &'a Device) -> Self {
+    pub(crate) fn new(device: &'a Device) -> Self {
         Self {
             device,
             inited: false,
         }
     }
 
+    /// Initialize UART function
     pub fn init(&mut self) -> Ft260Result<()> {
         let device = self.device;
         let gpio = device.gpio();
         if let Err(e) = gpio.disable_pin(gpio::Group::Gpio_B_C_D_E_F_H) {
             dbg!(&e);
+            dbg_write!("Failed to disable Gpio B,C,D,E,F,H");
             return Err(e);
         }
         if let Err(e) = reports::uart::init(device) {
             dbg!(&e);
+            dbg_write!("Failed to initialize UART function");
             return Err(e);
         }
         self.inited = true;
         Ok(())
     }
 
+    /// Configure UART function with parameters set
     pub fn set_config(&self, cfg: &Config) -> Ft260Result<()> {
         let device = self.device;
 
@@ -201,29 +235,36 @@ impl<'a> Uart<'a> {
         Ok(())
     }
 
+    /// Get current UART configuration parameters
     pub fn get_config(&self) -> Ft260Result<Config> {
         let device = self.device;
         let cfg = reports::uart::get_config(device);
         if cfg.is_err() {
+            dbg_write!("Failed to get UART config");
             return Err(cfg.unwrap_err());
         }
         let cfg = cfg.unwrap();
         Ok(Config::from_hid(&cfg))
     }
 
-    pub fn get_amount_in_rx_fifo(&self) -> usize {
+    /// Get data amount in RX data FIFO
+    pub fn size_to_read(&self) -> usize {
         reports::uart::get_queue_status(self.device)
     }
 
+    /// Read RX data from FIFO
     pub fn read(&self, buf: &mut [u8], len: usize, duration_wait: Duration) -> Ft260Result<usize> {
         reports::uart::read(self.device, buf, len, duration_wait)
     }
 
+    /// Write TX data
     pub fn write(&self, buf: &[u8], len: usize) -> Ft260Result<usize> {
         reports::uart::write(self.device, buf, len)
     }
 
-    pub fn reset(&self) -> Ft260Result<()> {
+    /// Reset UART function  
+    /// > "The request will reset the FT260 UART controller."
+    fn reset(&self) -> Ft260Result<()> {
         reports::uart::reset(self.device)
     }
 }

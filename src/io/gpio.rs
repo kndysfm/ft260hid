@@ -1,59 +1,90 @@
+use crate::device::Device;
 use crate::hid::consts::*;
 use crate::hid::reports;
-use crate::{device::Device, Ft260Error, Ft260Result};
+use crate::Ft260Result;
 
+/// Interface type to use GPIO function of the FT260 device.
 #[derive(Debug)]
 pub struct Gpio<'a> {
     device: &'a Device,
 }
 
+/// FT260 has 14 GPIO pins (Refer "3.3 Pin Description" in [datasheet](https://ftdichip.com/wp-content/uploads/2023/11/DS_FT260.pdf))
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Pin {
+    /// DIO5 (SCL / GPIO0)
     Gpio0,
+    /// DIO6 (SDA / GPIO1)
     Gpio1,
+    /// DIO7 (SUSPOUT_N / PWREN_N / TX_LED / GPIO2)
     Gpio2,
+    /// DIO8 (INTRIN / WAKEUP / GPIO3)
     Gpio3,
+    /// DIO10 (GPIO4 / DCD)
     Gpio4,
+    /// DIO11 (GPIO5 / RI)
     Gpio5,
+    /// DIO0 (TX_ACTIVE / TX_LED / GPIOA)
     GpioA,
+    /// DIO1 (GPIOB / RTSN)
     GpioB,
+    /// DIO3 (RXD / GPIOC)
     GpioC,
+    /// DIO4 (TXD / GPIOD)
     GpioD,
+    /// DIO2 (GPIOE / CTSN)
     GpioE,
+    /// DIO9 (GPIOF / DTRN)
     GpioF,
+    /// DIO12 (BCD_DET / RX_LED / PWREN_N / GPIOG)
     GpioG,
+    /// DIO13 (GPIOH / DSRN)
     GpioH,
 }
 
+/// GPIO groups separated by functions
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Group {
+    /// Pins for I2C
     Gpio_0_1,
+    /// Pin for suspend out, etc.
     Gpio_2,
+    /// Pin for interrupt in
     Gpio_3,
+    /// Pins for UART DCD(Data Carrier Detection) / RI(Ring Indictor)
     Gpio_4_5,
+    /// Pin for TX indication
     Gpio_A,
+    /// Pins for UART (TXD/RXD/CTS/RTS/DTR/DSR)
     Gpio_B_C_D_E_F_H,
+    /// Pin for
     Gpio_G,
 }
 
+/// Direction of GPIO pin
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Dir {
+    /// Input
     In,
+    /// Output
     Out,
 }
 
+/// Value of GPIO pin's input or output
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Val {
+    // Low level
     Low,
+    // High level
     High,
 }
 
 impl<'a> Gpio<'a> {
-    pub fn new(device: &'a Device) -> Self {
+    pub(crate) fn new(device: &'a Device) -> Self {
         Self { device }
     }
 
-    /// enable GPIO function for specific pin group
+    /// Enable GPIO function for specific pin group
     pub fn enable_pin(&self, group: Group) -> Ft260Result<()> {
         match group {
             Group::Gpio_0_1 => reports::gpio::set_i2c_pins(self.device, I2cEnableMode::Disabled),
@@ -78,7 +109,7 @@ impl<'a> Gpio<'a> {
         }
     }
 
-    /// disable GPIO function and reset as default function
+    /// Disable GPIO function and reset as default function
     pub fn disable_pin(&self, group: Group) -> Ft260Result<()> {
         match group {
             Group::Gpio_0_1 => reports::gpio::set_i2c_pins(self.device, I2cEnableMode::Enabled),
@@ -122,7 +153,7 @@ impl<'a> Gpio<'a> {
         }
     }
 
-    /// set direction of GPIO
+    /// Set direction of GPIO
     pub fn set_dir(&self, pin_sel: Pin, dir: Dir) -> Ft260Result<()> {
         let dir = match dir {
             Dir::In => GpioDir::In,
