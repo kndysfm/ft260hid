@@ -10,11 +10,17 @@ const EEPROM_ADDRESS: u8 = 0x50;
 const EEPROM_PAGE_SIZE: usize = 8;
 
 fn wait_in_busy(i2c: &i2c::I2c) {
-  while !i2c.is_idle() { }
+  loop {
+    match i2c.is_idle() { 
+      Some(true) => { break; },
+      Some(false) => { continue; },
+      None => panic!(),
+    }
+  }
 }
 
 fn wait_write(i2c: &i2c::I2c) {
-  while !i2c.is_idle() { }
+  wait_in_busy(i2c);
   // write cycle time 5ms typ.
   thread::sleep(Duration::from_millis(5));
 }

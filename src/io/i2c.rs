@@ -103,10 +103,10 @@ impl<'a> I2c<'a> {
     Ok(())
   }
 
-  pub fn is_idle(&self) -> bool {
+  pub fn is_idle(&self) -> Option<bool> {
     match ft260_i2c_master_get_status(self.device) {
-      Ok(s) => s == I2cBusStatus::ControllerIdle,
-      Err(e) => false,
+      Ok(s) => Some(s == I2cBusStatus::ControllerIdle),
+      Err(e) => None,
     }
   }
 
