@@ -1,8 +1,8 @@
 // mod consts;
+pub mod device;
 mod error;
 mod hid;
 pub mod io;
-pub mod device;
 
 pub use error::Ft260Error;
 

@@ -1,8 +1,7 @@
 ///
 /// "LibFT260.h" was referred
 /// [Link](https://ftdichip.com/wp-content/uploads/2022/10/LibFT260-v1.1.6.zip)
-/// 
-
+///
 use bitflags::bitflags;
 
 use crate::{Ft260Error, Ft260Result};
@@ -22,8 +21,8 @@ macro_rules! back_to_enum {
             fn try_from(v: u8) -> Result<Self, Self::Error> {
                 match v {
                     $(x if x == $name::$vname as u8 => Ok($name::$vname),)*
-                    _ => Err(Ft260Error::ByteError { 
-                                value: v, 
+                    _ => Err(Ft260Error::ByteError {
+                                value: v,
                                 message: "Failed converting byte into enum value".to_string() }),
                 }
             }
@@ -32,8 +31,7 @@ macro_rules! back_to_enum {
 }
 
 #[repr(u8)]
-pub(crate) enum Ft260Status
-{
+pub(crate) enum Ft260Status {
     Ok = 0,
     InvalidHandle,
     DeviceNotFound,
@@ -67,30 +65,26 @@ bitflags! {
 
 /// operation clock
 #[repr(u8)]
-pub(crate) enum ClkCtl
-{
+pub(crate) enum ClkCtl {
     _12MHz = 0,
     _24MHz = 1,
     _48MHz = 2,
 }
 
 #[repr(u8)]
-pub(crate) enum SuspendStatus
-{
+pub(crate) enum SuspendStatus {
     NotSuspended = 0,
     Suspended = 1,
 }
 
 #[repr(u8)]
-pub(crate) enum PwrEnStatus
-{
+pub(crate) enum PwrEnStatus {
     NotReqdy = 0,
     Ready = 1,
 }
 
 #[repr(u8)]
-pub(crate) enum I2cEnableMode
-{ 
+pub(crate) enum I2cEnableMode {
     Disabled = 0,
     Enabled = 1,
 }
@@ -109,8 +103,7 @@ pub(crate) enum UartEnableMode
 }
 
 #[repr(u8)]
-pub(crate) enum HidOverI2cEnableMode
-{
+pub(crate) enum HidOverI2cEnableMode {
     NotConfigured = 0,
     Configured = 1,
 }
@@ -126,22 +119,20 @@ pub(crate) enum UartDcdRiEnableMode
 
 /// Pin configuration of DIO7
 #[repr(u8)]
-pub(crate) enum Gpio2Function
-{
+pub(crate) enum Gpio2Function {
     /// GPIO2
     Gpio = 0,
     /// [default] the indicator when entering the USB suspending state
     SuspOut = 1,
     /// as the power enable indicator when the FT260 is USB enumerated
     _PwrEn = 2,
-    /// 
+    ///
     TxLed = 4,
 }
 
 /// Pin configuration of DIO0
 #[repr(u8)]
-pub(crate) enum GpioAFunction
-{
+pub(crate) enum GpioAFunction {
     /// GPIOA
     Gpio = 0,
     /// [default] to indicate the UART transmitting is active
@@ -152,10 +143,9 @@ pub(crate) enum GpioAFunction
 
 /// Pin configuration of DIO13
 #[repr(u8)]
-pub(crate) enum GpioGFunction
-{
+pub(crate) enum GpioGFunction {
     /// GPIOG
-    Gpio= 0,
+    Gpio = 0,
     /// as the power enable indicator when FT260 is USB enumerated. Low active
     _PwrEn = 2,
     /// as the LED driving source when data is received on UART RX port
@@ -165,15 +155,13 @@ pub(crate) enum GpioGFunction
 }
 
 #[repr(u8)]
-pub(crate) enum SuspendOutPol
-{
+pub(crate) enum SuspendOutPol {
     High = 0, // suspend output active high
-    Low = 1, // suspend output active low
+    Low = 1,  // suspend output active low
 }
 
 #[repr(u8)]
-pub(crate) enum WakeupIntEnableMode
-{
+pub(crate) enum WakeupIntEnableMode {
     Disabled = 0, // the pin acts as GPIO3
     Enabled = 1,
 }
@@ -181,8 +169,7 @@ pub(crate) enum WakeupIntEnableMode
 /// interrupt trigger by input to GPIO3 (DIO8)
 /// tigger conditions on the interrupt pin
 #[repr(u8)]
-pub(crate) enum InterruptTrigger
-{
+pub(crate) enum InterruptTrigger {
     Rising = 0x00,
     High = 0x01,
     Falling = 0x02,
@@ -190,15 +177,13 @@ pub(crate) enum InterruptTrigger
 }
 /// interrupt level duration select
 #[repr(u8)]
-pub(crate) enum InterruptDuration
-{
+pub(crate) enum InterruptDuration {
     _1ms = 0x04,
     _5ms = 0x08,
     _30ms = 0x0C,
 }
 #[repr(u8)]
-pub(crate) enum PowerSavingEnableMode
-{ 
+pub(crate) enum PowerSavingEnableMode {
     Disable = 0,
     Enable = 1,
 }
@@ -254,19 +239,17 @@ bitflags! {
   }
 }
 
-/// RI, Ring Indicator, can be enabled via a USB command for the UART interface. 
+/// RI, Ring Indicator, can be enabled via a USB command for the UART interface.
 /// RI may be used as an alternative to WAKEUP for waking up the USB host.
 #[repr(u8)]
-pub(crate) enum UartRiWakeupConfig
-{
+pub(crate) enum UartRiWakeupConfig {
     RisingEdge = 0,
     FallingEdge = 1, // (default)
 }
 
 /// For Report ID 0xA1
 #[repr(u8)]
-pub(crate) enum Request
-{
+pub(crate) enum Request {
     SetClock = 0x01,
     SetI2cMode = 0x02,
     SetUartMode = 0x03,
@@ -290,7 +273,7 @@ pub(crate) enum Request
     /// </summary>
     SelectGpioGFunction = 0x09,
     /// <summary>
-    /// 
+    ///
     /// </summary>
     SetInterruptTriggerCondition = 0x0A,
     /// <summary>
@@ -317,13 +300,13 @@ pub(crate) enum Request
     SetDriveStrength3 = 0x51,
     SetDriveStrength4 = 0x52,
     SetSlewRate0 = 0x53,
-    SetGpioPullUp = 0x61,       // takes GpioBitVal
-    SetGpioOpenDrain = 0x62,    // takes GpioBitVal
-    SetGpioPullDown = 0x63,     // takes GpioBitVal
-    SetGpioSlewRate = 0x65,     // takes GpioBitVal
+    SetGpioPullUp = 0x61,    // takes GpioBitVal
+    SetGpioOpenDrain = 0x62, // takes GpioBitVal
+    SetGpioPullDown = 0x63,  // takes GpioBitVal
+    SetGpioSlewRate = 0x65,  // takes GpioBitVal
     // FT260_SetParam_U16 Params
-    SetSuspendModeGpio0 = 0x10, // GPIO 0-5
-    SetSuspendModeGpioA = 0x11, // GPIO A-H
+    SetSuspendModeGpio0 = 0x10,   // GPIO 0-5
+    SetSuspendModeGpioA = 0x11,   // GPIO A-H
     SetDriveStrengthGpio0 = 0x64, // GPIO 0-5
 }
 
@@ -364,8 +347,7 @@ bitflags! {
 }
 
 #[repr(u8)]
-pub(crate) enum GpioBitPos
-{
+pub(crate) enum GpioBitPos {
     _0 = 0,
     _1 = 1,
     _2 = 2,
@@ -387,9 +369,9 @@ pub(crate) struct GpioBitVal : u8
     const _5   = 1 << 5;
     const All = Self::_0.bits() |
                 Self::_1.bits() |
-                Self::_2.bits() | 
-                Self::_3.bits() | 
-                Self::_4.bits() | 
+                Self::_2.bits() |
+                Self::_3.bits() |
+                Self::_4.bits() |
                 Self::_5.bits() ;
 }
 }
@@ -416,22 +398,19 @@ pub(crate) struct GpioPinNum: u16 {
 }
 
 #[repr(u8)]
-pub(crate) enum GpioDir
-{
+pub(crate) enum GpioDir {
     In = 0,
     Out = 1,
 }
 
 #[repr(u8)]
-pub(crate) enum GpioValue
-{
+pub(crate) enum GpioValue {
     Low = 0,
     High = 1,
 }
 
 #[repr(u8)]
-pub(crate) enum GpioExBitPos
-{
+pub(crate) enum GpioExBitPos {
     _A = 0,
     _B = 1,
     _C = 2,
@@ -455,7 +434,7 @@ bitflags! {
     const _F  = 1 << 5;
     const _G  = 1 << 6;
     const _H  = 1 << 7;
-    const All = Self::_A.bits() | 
+    const All = Self::_A.bits() |
                 Self::_B.bits() |
                 Self::_C.bits() |
                 Self::_D.bits() |
@@ -487,13 +466,13 @@ pub(crate) enum ReportId
     FeatI2cStatus = 0xC0, // Feature I2C Status
     OutI2cReadRequest = 0xC2, // Output I2C Read Request
     // 0xD0 to 0xDE Input, Output I2C Report
-    InOutI2cReport04 = 0xD0, 
-    InOutI2cReport08 = 0xD1, 
-    InOutI2cReport0C = 0xD2, 
+    InOutI2cReport04 = 0xD0,
+    InOutI2cReport08 = 0xD1,
+    InOutI2cReport0C = 0xD2,
     InOutI2cReport10 = 0xD3,
-    InOutI2cReport14 = 0xD4, 
+    InOutI2cReport14 = 0xD4,
     InOutI2cReport18 = 0xD5,
-    InOutI2cReport1C = 0xD6, 
+    InOutI2cReport1C = 0xD6,
     InOutI2cReport20 = 0xD7,
     InOutI2cReport24 = 0xD8,
     InOutI2cReport28 = 0xD9,
@@ -507,13 +486,13 @@ pub(crate) enum ReportId
     FeatUartStatus = 0xE0, // Feature UART Status
     FeatUartRiAndDcdStatus = 0xE2, // Feature UART RI and DCD Status
     // 0xF0 to 0xFE Input, Output UART Report
-    InOutUartReport04 = 0xF0, 
-    InOutUartReport08 = 0xF1, 
-    InOutUartReport0C = 0xF2, 
+    InOutUartReport04 = 0xF0,
+    InOutUartReport08 = 0xF1,
+    InOutUartReport0C = 0xF2,
     InOutUartReport10 = 0xF3,
-    InOutUartReport14 = 0xF4, 
-    InOutUartReport18 = 0xF5, 
-    InOutUartReport1C = 0xF6, 
+    InOutUartReport14 = 0xF4,
+    InOutUartReport18 = 0xF5,
+    InOutUartReport1C = 0xF6,
     InOutUartReport20 = 0xF7,
     InOutUartReport24 = 0xF8,
     InOutUartReport28 = 0xF9,
