@@ -126,10 +126,10 @@ pub(crate) fn ft260_set_suspend_out_polarity(device: &Device, polarity: SuspendO
   ft260_set_request_u8(device, Request::SetSuspendOutPol, polarity as u8)
 }
 
-
+fn feat_rep_buf() -> [u8;64] { [0u8; 64] }
 
 pub(crate) fn ft260_get_chip_version(device: &Device) -> Ft260Result<u32> {
-  let mut buf = [0u8; 64];
+  let mut buf = feat_rep_buf();
   buf[0] = ReportId::FeatChipCode as u8;
   let res = device.get_feature(&mut buf);
   if let Ok(sz) = res {
@@ -214,7 +214,7 @@ fn decide_i2c_payload_size(id: ReportId) -> usize {
 fn i2c_write_request(device: &Device, report_id: ReportId,
     slave_addr: u8, flag: I2cCondition, 
     length: usize, src: &[u8], src_index: usize) -> Ft260Result<()>{
-  let mut buf = [0u8; 64];
+  let mut buf = feat_rep_buf();
   buf[0] = report_id as u8;
   buf[1] = slave_addr;
   buf[2] = flag.bits();
@@ -227,7 +227,7 @@ fn i2c_write_request(device: &Device, report_id: ReportId,
 
 fn i2c_read_request(device: &Device,
     slave_addr: u8, flag: I2cCondition, length: usize) -> Ft260Result<()> {
-  let mut buf = [0u8; 64];
+  let mut buf = feat_rep_buf();
   buf[0] = ReportId::OutI2cReadRequest as u8;
   buf[1] = slave_addr;
   buf[2] = flag.bits();
@@ -307,7 +307,7 @@ pub(crate) fn ft260_i2c_master_write(device: &Device,
             byte_remained
         };
         let report_id = decide_i2c_report_id(size_write);
-        let mut slice = [0u8; 64];
+        let mut slice = feat_rep_buf();
         for i in 0..size_write { slice[i] = buf[byte_written + i]; }
         byte_remained -= size_write;
         let res = i2c_write_request(device, report_id, device_address, fval, size_write, &slice, 0);
@@ -325,7 +325,7 @@ pub(crate) fn ft260_i2c_master_write(device: &Device,
 }
 
 pub(crate) fn ft260_i2c_master_get_status(device: &Device) -> Ft260Result<I2cBusStatus> {
-    let mut buf = [0u8; 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatI2cStatus as u8;
     let res = device.get_feature(&mut buf);
     if let Ok(sz) = res {
@@ -346,7 +346,7 @@ pub(crate) fn ft260_i2c_master_reset(device: &Device) -> Ft260Result<()> {
 
 pub(crate) fn ft260_uart_init(device: &Device) -> Ft260Result<()> {
     const BAUD_DEFAULT: u32 = 115200;
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::ConfigureUart as u8;
     buf[2] = UartEnableMode::DtrDsr as u8;
@@ -362,7 +362,7 @@ pub(crate) fn ft260_uart_init(device: &Device) -> Ft260Result<()> {
 }
 
 pub(crate) fn ft260_uart_set_baud_rate(device: &Device, baud_rate: u32) -> Ft260Result<()> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::SetUartBaudRate as u8;
     buf[2] = ((baud_rate >> 0) & 0xFF) as u8;
@@ -373,7 +373,7 @@ pub(crate) fn ft260_uart_set_baud_rate(device: &Device, baud_rate: u32) -> Ft260
 }
 
 pub(crate) fn ft260_uart_set_flow_control(device: &Device, flow_control: UartEnableMode) -> Ft260Result<()> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::SetUartMode as u8;
     buf[2] = flow_control as u8;
@@ -381,21 +381,21 @@ pub(crate) fn ft260_uart_set_flow_control(device: &Device, flow_control: UartEna
 }
 
 pub(crate) fn ft260_uart_set_data_bits(device: &Device, data_bits: UartDataBits) -> Ft260Result<()> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::SetUartDataBits as u8;
     buf[2] = data_bits as u8;
     device.set_feature(&buf)
 }
 pub(crate) fn ft260_uart_set_stop_bit(device: &Device, stop_bit: UartStopBit) -> Ft260Result<()> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::SetUartStopBit as u8;
     buf[2] = stop_bit as u8;
     device.set_feature(&buf)
 }
 pub(crate) fn ft260_uart_set_parity(device: &Device, parity: UartParity) -> Ft260Result<()> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::SetUartParity as u8;
     buf[2] = parity as u8;
@@ -403,7 +403,7 @@ pub(crate) fn ft260_uart_set_parity(device: &Device, parity: UartParity) -> Ft26
 }
 
 pub(crate) fn ft260_uart_set_breaking(device: &Device, breaking: UartBreaking) -> Ft260Result<()> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::SetUartBreaking as u8;
     buf[2] = breaking as u8;
@@ -411,7 +411,7 @@ pub(crate) fn ft260_uart_set_breaking(device: &Device, breaking: UartBreaking) -
 }
 
 pub(crate) fn ft260_uart_set_xon_xoff_char(device: &Device, x_on: u8, x_off: u8) -> Ft260Result<()> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::SetUartXonXoff as u8;
     buf[2] = x_on;
@@ -431,7 +431,7 @@ pub(crate) struct UartConfig
 }
 
 pub(crate) fn ft260_uart_get_config(device: &Device) -> Ft260Result<UartConfig> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatUartStatus as u8;
     if let Err(e) = device.get_feature(&mut buf) {
         return Err(e);
@@ -504,7 +504,7 @@ fn decide_uart_payload_size(id: ReportId) -> usize {
 }
 
 fn uart_write_request(device: &Device, report_id: ReportId, src: &[u8], len_src: usize) -> Ft260Result<()> {
-    let mut buf = [0u8; 64];
+    let mut buf = feat_rep_buf();
     buf[0] = report_id as u8;
     buf[1] = len_src as u8;
     for i in 0..len_src {
@@ -559,7 +559,7 @@ pub(crate) fn ft260_uart_write(device: &Device,
     loop {
         let size_write = if byte_remained > UART_PAYLOAD_SIZE_MAX { UART_PAYLOAD_SIZE_MAX } else { byte_remained};
         let rid = decide_uart_report_id(size_write);
-        let mut slice = [0u8; 64];
+        let mut slice = feat_rep_buf();
         for i in 0..size_write { slice[i] = buf[byte_written + i]; }
         byte_remained -= size_write;
         let res = uart_write_request(device, rid, &slice, size_write);
@@ -577,14 +577,14 @@ pub(crate) fn ft260_uart_write(device: &Device,
 }
 
 pub(crate) fn ft260_uart_reset(device: &Device) -> Ft260Result<()> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::ResetUart as u8;
     device.set_feature(&buf)
 }
 
 pub(crate) fn ft260_uart_get_dcd_ri_status(device: &Device) -> Ft260Result<UartDcdRiStatus> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatUartRiAndDcdStatus as u8;
     if let Err(e) = device.get_feature(&mut buf) {
         return Err(e);
@@ -597,7 +597,7 @@ pub(crate) fn ft260_uart_get_dcd_ri_status(device: &Device) -> Ft260Result<UartD
 }
 
 pub(crate) fn ft260_uart_enable_ri_wakeup(device: &Device, enable: WakeupIntEnableMode) -> Ft260Result<()> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::EnableUartRiWaveup as u8;
     buf[2] = enable as u8;
@@ -605,7 +605,7 @@ pub(crate) fn ft260_uart_enable_ri_wakeup(device: &Device, enable: WakeupIntEnab
 }
 
 pub(crate) fn ft260_uart_set_ri_wakeup_config(device: &Device, config: UartRiWakeupConfig) -> Ft260Result<()> {
-    let mut buf = [0u8, 64];
+    let mut buf = feat_rep_buf();
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::SetUartRiWakeupConfig as u8;
     buf[2] = config as u8;
