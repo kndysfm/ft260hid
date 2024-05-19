@@ -41,12 +41,12 @@ pub struct Device {
 pub const VID_DEFAULT: u16 = 0x0403;
 pub const PID_DEFAULT: u16 = 0x6030;
 
-pub fn open(index: usize) -> Option<Device> {
-  open_by_vid_pid(VID_DEFAULT, PID_DEFAULT, index)
+pub fn open(interface: i32) -> Option<Device> {
+  open_by_vid_pid(VID_DEFAULT, PID_DEFAULT, interface)
 }
 
-pub fn open_by_vid_pid(vendor_id: u16, product_id: u16, index: usize) -> Option<Device> {
-  Device::try_new(vendor_id, product_id, index)
+pub fn open_by_vid_pid(vendor_id: u16, product_id: u16, interface: i32) -> Option<Device> {
+  Device::try_new(vendor_id, product_id, interface, 0) // try find only the first one
 }
 
 impl Device {
@@ -92,11 +92,12 @@ impl Device {
     }
   }
 
-  fn try_new(vendor_id: u16, product_id: u16, index: usize) -> Option<Self> {
+  fn try_new(vendor_id: u16, product_id: u16, interface: i32, index: usize) -> Option<Self> {
+    assert!(interface == 0 || interface == 1);
     let api = hidapi::HidApi::new().expect("Failed to create HID API context");
     let mut infs: Vec<&DeviceInfo> = Vec::new();
     for inf in api.device_list() {
-      if (vendor_id, product_id) == (inf.vendor_id(), inf.product_id()) {
+      if (vendor_id, product_id, interface) == (inf.vendor_id(), inf.product_id(), inf.interface_number()) {
         print!("found:");
         dbg!(inf);
         infs.push(inf);

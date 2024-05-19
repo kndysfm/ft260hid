@@ -10,9 +10,15 @@
 //! 
 //! ## Settings
 //! 
+//! ### Interfaces
+//! 
+//! To test I2C and UART, set `DCNF0=1` (JP7) and `DCNF1=1` (JP9).
+//! With this configuration, two HID interfaces should be created.
+//! One is for I2C, and the other is for UART.
+//! 
 //! ### I2C
 //! 
-//! No need to modify. But if `JP8`` has been cut already, solder it again.
+//! No need to modify. But if `JP8` has been cut already, solder it again.
 //! 
 //! ### UART
 //! 
