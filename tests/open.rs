@@ -1,6 +1,8 @@
 use ft260hid::device;
+use serial_test::serial;
 
 #[test]
+#[serial]
 fn open_hid() {
   assert!(device::open_by_vid_pid(0x0403, 0x6030, 0).is_some());
   assert!(device::open_by_vid_pid(0x0403, 0x6030, 1).is_some());

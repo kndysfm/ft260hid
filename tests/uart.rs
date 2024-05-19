@@ -5,9 +5,11 @@ use ft260hid::device;
 use ft260hid::io::uart;
 
 use rand::prelude::*;
+use serial_test::serial;
 
 
 #[test]
+#[serial]
 fn test_uart_cfg() {
   let dev = device::open(1). unwrap();
   let mut uart = dev.uart();
@@ -38,6 +40,7 @@ fn test_uart_cfg() {
 }
 
 #[test]
+#[serial]
 fn test_uart_tx_rx() {
   let mut buf_tx = [0u8;256];
 

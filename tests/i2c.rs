@@ -5,6 +5,7 @@ use ft260hid::device;
 use ft260hid::io::i2c;
 
 use rand::prelude::*;
+use serial_test::serial;
 
 const EEPROM_ADDRESS: u8 = 0x50;
 const EEPROM_PAGE_SIZE: usize = 8;
@@ -26,6 +27,7 @@ fn wait_write(i2c: &i2c::I2c) {
 }
 
 #[test]
+#[serial]
 fn test_i2c_basic() {
   let mut rand = [0u8;EEPROM_PAGE_SIZE];
   thread_rng().fill(&mut rand);
@@ -77,6 +79,7 @@ fn test_i2c_basic() {
 
 /// test repeated read write
 #[test]
+#[serial]
 fn test_i2c_write_read() {
   let dev = device::open(0).unwrap();
   let mut i2c = dev.i2c();
@@ -99,6 +102,7 @@ fn test_i2c_write_read() {
 
 /// test long read write
 #[test]
+#[serial]
 fn test_i2c_long_data() {
   let mut data = [0u8;256];
   thread_rng().fill(&mut data);

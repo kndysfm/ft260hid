@@ -3,8 +3,10 @@ use std::time::Duration;
 
 use ft260hid::device;
 use ft260hid::io::gpio::{Pin, Dir, Group, Val};
+use serial_test::serial;
 
 #[test]
+#[serial]
 fn read_value() {
   let dev = device::open(0).unwrap();
   let gpio = dev.gpio();
