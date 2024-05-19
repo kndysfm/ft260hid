@@ -96,7 +96,7 @@ hid_const_compatible!{
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Config {
   pub mode: Mode,
   pub baud: u32,
@@ -107,6 +107,8 @@ pub struct Config {
 }
 
 pub const BAUD_DEFAULT: u32 = 115200;
+
+pub const DURATION_WAIT_DEFAULT: Duration = Duration::from_millis(5000);
 
 impl Config {
   pub fn default() -> Self{ 
@@ -206,7 +208,7 @@ impl<'a> Uart<'a> {
     Ok(Config::from_hid(&cfg))
   }
 
-  pub fn get_amount_in_rx_fifo(&self) -> Ft260Result<usize> {
+  pub fn get_amount_in_rx_fifo(&self) -> usize {
     ft260_uart_get_queue_status(self.device)
   }
 

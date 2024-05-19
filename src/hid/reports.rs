@@ -437,10 +437,10 @@ pub(crate) fn ft260_uart_get_config(device: &Device) -> Ft260Result<UartConfig> 
         return Err(e);
     }
     let mode = UartEnableMode::try_from(buf[1]);
-    let data_bits = UartDataBits::try_from(buf[5]);
-    let parity = UartParity::try_from(buf[6]);
-    let stop_bit = UartStopBit::try_from(buf[7]);
-    let breaking = UartBreaking::try_from(buf[8]);
+    let data_bits = UartDataBits::try_from(buf[6]);
+    let parity = UartParity::try_from(buf[7]);
+    let stop_bit = UartStopBit::try_from(buf[8]);
+    let breaking = UartBreaking::try_from(buf[9]);
     if let Err(e) = mode { return Err(e); }
     if let Err(e) = data_bits { return Err(e); }
     if let Err(e) = parity { return Err(e); }
@@ -457,8 +457,8 @@ pub(crate) fn ft260_uart_get_config(device: &Device) -> Ft260Result<UartConfig> 
     Ok(UartConfig {mode, baud_rate, data_bits, parity, stop_bit, breaking})
 }
 
-pub(crate) fn ft260_uart_get_queue_status(device: &Device) -> Ft260Result<usize> {
-    Ok(get_input_report_byte_amount_uart(device))
+pub(crate) fn ft260_uart_get_queue_status(device: &Device) -> usize {
+    get_input_report_byte_amount_uart(device)
 }
 
 fn decide_uart_report_id(length: usize) -> ReportId {
