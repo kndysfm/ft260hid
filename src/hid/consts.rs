@@ -96,6 +96,7 @@ pub(crate) enum I2cEnableMode
 }
 
 back_to_enum! {
+#[derive(Debug)]
 #[repr(u8)]
 pub(crate) enum UartEnableMode
 {
@@ -203,6 +204,7 @@ pub(crate) enum PowerSavingEnableMode
 }
 
 back_to_enum! {
+#[derive(Debug)]
 #[repr(u8)]
 pub(crate) enum UartParity
 {
@@ -215,6 +217,7 @@ pub(crate) enum UartParity
 }
 
 back_to_enum! {
+#[derive(Debug)]
 #[repr(u8)]
 pub(crate) enum UartStopBit
 {
@@ -224,6 +227,7 @@ pub(crate) enum UartStopBit
 }
 
 back_to_enum! {
+#[derive(Debug)]
 #[repr(u8)]
 pub(crate) enum UartBreaking
 {
@@ -233,6 +237,7 @@ pub(crate) enum UartBreaking
 }
 
 back_to_enum! {
+#[derive(Debug)]
 #[repr(u8)]
 pub(crate) enum UartDataBits
 {

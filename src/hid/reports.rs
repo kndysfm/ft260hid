@@ -380,7 +380,7 @@ pub(crate) fn ft260_uart_set_flow_control(device: &Device, flow_control: UartEna
     device.set_feature(&buf)
 }
 
-pub(crate) fn t260_uart_set_data_bits(device: &Device, data_bits: UartDataBits) -> Ft260Result<()> {
+pub(crate) fn ft260_uart_set_data_bits(device: &Device, data_bits: UartDataBits) -> Ft260Result<()> {
     let mut buf = [0u8, 64];
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::SetUartDataBits as u8;
@@ -402,7 +402,7 @@ pub(crate) fn ft260_uart_set_parity(device: &Device, parity: UartParity) -> Ft26
     device.set_feature(&buf)
 }
 
-pub(crate) fn ft260_uart_set_break_on(device: &Device, breaking: UartBreaking) -> Ft260Result<()> {
+pub(crate) fn ft260_uart_set_breaking(device: &Device, breaking: UartBreaking) -> Ft260Result<()> {
     let mut buf = [0u8, 64];
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::SetUartBreaking as u8;
@@ -419,6 +419,7 @@ pub(crate) fn ft260_uart_set_xon_xoff_char(device: &Device, x_on: u8, x_off: u8)
     device.set_feature(&buf)
 }
 
+#[derive(Debug)]
 pub(crate) struct UartConfig
 {
     pub(crate) mode: UartEnableMode,
