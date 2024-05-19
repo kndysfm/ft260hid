@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use crate::device;
 use crate::hid::consts::*;
-use crate::hid::reports::*;
+use crate::hid::reports;
 use crate::io::gpio;
 use crate::{device::Device, Ft260Result};
 
@@ -121,7 +121,7 @@ impl Config {
             breaking: Breaking::NoBreak,
         }
     }
-    fn from_hid(cfg: &UartConfig) -> Self {
+    fn from_hid(cfg: &reports::uart::Config) -> Self {
         Self {
             mode: Mode::from_hid_const(&cfg.mode),
             baud: cfg.baud_rate,
@@ -162,7 +162,7 @@ impl<'a> Uart<'a> {
             dbg!(&e);
             return Err(e);
         }
-        if let Err(e) = ft260_uart_init(device) {
+        if let Err(e) = reports::uart::init(device) {
             dbg!(&e);
             return Err(e);
         }
@@ -173,27 +173,27 @@ impl<'a> Uart<'a> {
     pub fn set_config(&self, cfg: &Config) -> Ft260Result<()> {
         let device = self.device;
 
-        if let Err(e) = ft260_uart_set_flow_control(device, cfg.mode.to_hid_const()) {
+        if let Err(e) = reports::uart::set_flow_control(device, cfg.mode.to_hid_const()) {
             dbg!(&e);
             return Err(e);
         }
-        if let Err(e) = ft260_uart_set_baud_rate(device, cfg.baud) {
+        if let Err(e) = reports::uart::set_baud_rate(device, cfg.baud) {
             dbg!(&e);
             return Err(e);
         }
-        if let Err(e) = ft260_uart_set_data_bits(device, cfg.data_bits.to_hid_const()) {
+        if let Err(e) = reports::uart::set_data_bits(device, cfg.data_bits.to_hid_const()) {
             dbg!(&e);
             return Err(e);
         }
-        if let Err(e) = ft260_uart_set_stop_bit(device, cfg.stop_bit.to_hid_const()) {
+        if let Err(e) = reports::uart::set_stop_bit(device, cfg.stop_bit.to_hid_const()) {
             dbg!(&e);
             return Err(e);
         }
-        if let Err(e) = ft260_uart_set_parity(device, cfg.parity.to_hid_const()) {
+        if let Err(e) = reports::uart::set_parity(device, cfg.parity.to_hid_const()) {
             dbg!(&e);
             return Err(e);
         }
-        if let Err(e) = ft260_uart_set_breaking(device, cfg.breaking.to_hid_const()) {
+        if let Err(e) = reports::uart::set_breaking(device, cfg.breaking.to_hid_const()) {
             dbg!(&e);
             return Err(e);
         }
@@ -203,7 +203,7 @@ impl<'a> Uart<'a> {
 
     pub fn get_config(&self) -> Ft260Result<Config> {
         let device = self.device;
-        let cfg = ft260_uart_get_config(device);
+        let cfg = reports::uart::get_config(device);
         if cfg.is_err() {
             return Err(cfg.unwrap_err());
         }
@@ -212,19 +212,19 @@ impl<'a> Uart<'a> {
     }
 
     pub fn get_amount_in_rx_fifo(&self) -> usize {
-        ft260_uart_get_queue_status(self.device)
+        reports::uart::get_queue_status(self.device)
     }
 
     pub fn read(&self, buf: &mut [u8], len: usize, duration_wait: Duration) -> Ft260Result<usize> {
-        ft260_uart_read(self.device, buf, len, duration_wait)
+        reports::uart::read(self.device, buf, len, duration_wait)
     }
 
     pub fn write(&self, buf: &[u8], len: usize) -> Ft260Result<usize> {
-        ft260_uart_write(self.device, buf, len)
+        reports::uart::write(self.device, buf, len)
     }
 
     pub fn reset(&self) -> Ft260Result<()> {
-        ft260_uart_reset(self.device)
+        reports::uart::reset(self.device)
     }
 }
 

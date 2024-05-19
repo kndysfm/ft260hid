@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::hid::consts::*;
-use crate::hid::reports::{self, ft260_i2c_master_get_status, ft260_i2c_master_reset};
+use crate::hid::reports;
 use crate::io::gpio;
 use crate::{device::Device, Ft260Error, Ft260Result};
 
@@ -39,7 +39,7 @@ impl<'a> I2c<'a> {
             dbg!(&e);
             return Err(e);
         }
-        match reports::ft260_i2c_master_init(&self.device, kbps) {
+        match reports::i2c::init(&self.device, kbps) {
             Ok(()) => {
                 self.inited = true;
                 Ok(())
@@ -68,7 +68,7 @@ impl<'a> I2c<'a> {
         duration_wait: Duration,
     ) -> Ft260Result<usize> {
         assert!(self.inited);
-        reports::ft260_i2c_master_read(
+        reports::i2c::read(
             self.device,
             addr,
             Self::flag_to_cond(flag),
@@ -80,7 +80,7 @@ impl<'a> I2c<'a> {
 
     pub fn write(&self, addr: u8, flag: Flag, buf: &[u8], len: usize) -> Ft260Result<usize> {
         assert!(self.inited);
-        reports::ft260_i2c_master_write(self.device, addr, Self::flag_to_cond(flag), buf, len)
+        reports::i2c::write(self.device, addr, Self::flag_to_cond(flag), buf, len)
     }
 
     pub fn write_read(
@@ -93,7 +93,7 @@ impl<'a> I2c<'a> {
         duration_wait: Duration,
     ) -> Ft260Result<()> {
         assert!(self.inited);
-        match ft260_i2c_master_get_status(self.device) {
+        match reports::i2c::get_status(self.device) {
             Ok(s) => {
                 if s != I2cBusStatus::ControllerIdle {
                     return Err(Ft260Error::I2cError {
@@ -117,7 +117,7 @@ impl<'a> I2c<'a> {
                 return Err(e);
             }
         };
-        match ft260_i2c_master_get_status(self.device) {
+        match reports::i2c::get_status(self.device) {
             Ok(s) => {
                 if s.intersects(I2cBusStatus::AddressNack) || s.intersects(I2cBusStatus::DataNack) {
                     return Err(Ft260Error::I2cError {
@@ -151,14 +151,14 @@ impl<'a> I2c<'a> {
     }
 
     pub fn is_idle(&self) -> Option<bool> {
-        match ft260_i2c_master_get_status(self.device) {
+        match reports::i2c::get_status(self.device) {
             Ok(s) => Some(s == I2cBusStatus::ControllerIdle),
             Err(e) => None,
         }
     }
 
     fn reset(&self) -> Ft260Result<()> {
-        ft260_i2c_master_reset(self.device)
+      reports::i2c::reset(self.device)
     }
 }
 
