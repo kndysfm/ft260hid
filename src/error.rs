@@ -1,12 +1,18 @@
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result};
 
+/// Common Error type in the crate
 #[derive(Debug)]
 pub enum Ft260Error {
+    /// Errors about HID
     HidError { message: String },
+    /// Errors in byte constant values in HID reports mainly
     ByteError { value: u8, message: String },
+    /// Errors in I2C communication
     I2cError { message: String },
+    /// Errors in UART communication
     UartError { message: String },
+    /// Other Errors
     OtherError { error: std::io::Error },
 }
 
