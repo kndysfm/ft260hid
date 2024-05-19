@@ -158,7 +158,7 @@ impl<'a> I2c<'a> {
     }
 
     fn reset(&self) -> Ft260Result<()> {
-      reports::i2c::reset(self.device)
+        reports::i2c::reset(self.device)
     }
 }
 

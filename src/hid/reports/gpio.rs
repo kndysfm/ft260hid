@@ -1,49 +1,46 @@
 use crate::device::Device;
 use crate::hid::consts::*;
-use crate::{Ft260Error, Ft260Result};
 use crate::hid::reports::*;
+use crate::{Ft260Error, Ft260Result};
 
 pub(crate) fn select_gpio_2_function(
-  device: &Device,
-  gpio2_function: Gpio2Function,
+    device: &Device,
+    gpio2_function: Gpio2Function,
 ) -> Ft260Result<()> {
-  ft260_set_request_u8(device, Request::SelectGpio2Function, gpio2_function as u8)
+    ft260_set_request_u8(device, Request::SelectGpio2Function, gpio2_function as u8)
 }
 
 pub(crate) fn select_gpio_a_function(
-  device: &Device,
-  gpio_a_function: GpioAFunction,
+    device: &Device,
+    gpio_a_function: GpioAFunction,
 ) -> Ft260Result<()> {
-  ft260_set_request_u8(device, Request::SelectGpioAFunction, gpio_a_function as u8)
+    ft260_set_request_u8(device, Request::SelectGpioAFunction, gpio_a_function as u8)
 }
 
 pub(crate) fn select_gpio_g_function(
-  device: &Device,
-  gpio_g_function: GpioGFunction,
+    device: &Device,
+    gpio_g_function: GpioGFunction,
 ) -> Ft260Result<()> {
-  ft260_set_request_u8(device, Request::SelectGpioGFunction, gpio_g_function as u8)
+    ft260_set_request_u8(device, Request::SelectGpioGFunction, gpio_g_function as u8)
 }
 
 pub(crate) fn set_suspend_out_polarity(
-  device: &Device,
-  polarity: SuspendOutPol,
+    device: &Device,
+    polarity: SuspendOutPol,
 ) -> Ft260Result<()> {
-  ft260_set_request_u8(device, Request::SetSuspendOutPol, polarity as u8)
+    ft260_set_request_u8(device, Request::SetSuspendOutPol, polarity as u8)
 }
 
 pub(crate) fn set_i2c_pins(device: &Device, enable: I2cEnableMode) -> Ft260Result<()> {
-  ft260_set_request_u8(device, Request::SetI2cMode, enable as u8)
+    ft260_set_request_u8(device, Request::SetI2cMode, enable as u8)
 }
 
 pub(crate) fn set_uart_pins(device: &Device, enable: UartEnableMode) -> Ft260Result<()> {
-  ft260_set_request_u8(device, Request::SetUartMode, enable as u8)
+    ft260_set_request_u8(device, Request::SetUartMode, enable as u8)
 }
 
-pub(crate) fn set_dcd_ri_pins(
-  device: &Device,
-  enable: UartDcdRiEnableMode,
-) -> Ft260Result<()> {
-  ft260_set_request_u8(device, Request::EnableUartDcdRi, enable as u8)
+pub(crate) fn set_dcd_ri_pins(device: &Device, enable: UartDcdRiEnableMode) -> Ft260Result<()> {
+    ft260_set_request_u8(device, Request::EnableUartDcdRi, enable as u8)
 }
 
 #[derive(Clone, Copy)]
@@ -138,11 +135,7 @@ fn pin_to_bits(pin: GpioPinNum) -> (GpioBitVal, GpioExBitVal) {
     (bits, ex_bits)
 }
 
-pub(crate) fn set_dir(
-    device: &Device,
-    pin: GpioPinNum,
-    dir: GpioDir,
-) -> Ft260Result<()> {
+pub(crate) fn set_dir(device: &Device, pin: GpioPinNum, dir: GpioDir) -> Ft260Result<()> {
     let res = get(device);
     if let Ok(req) = res {
         let mut req = req;
@@ -174,11 +167,7 @@ pub(crate) fn read(device: &Device, pin: GpioPinNum) -> Ft260Result<GpioValue> {
     }
 }
 
-pub(crate) fn write(
-    device: &Device,
-    pin: GpioPinNum,
-    val: GpioValue,
-) -> Ft260Result<()> {
+pub(crate) fn write(device: &Device, pin: GpioPinNum, val: GpioValue) -> Ft260Result<()> {
     let res = get(device);
     if let Ok(req) = res {
         let mut req = req;
@@ -195,10 +184,6 @@ pub(crate) fn write(
     }
 }
 
-pub(crate) fn set_pin_params(
-  device: &Device,
-  pin: GpioPinNum,
-  req: Request
-) -> Ft260Result<()> {
-  ft260_set_request_u8(device, req, (pin.bits() & 0x3F) as u8)
+pub(crate) fn set_pin_params(device: &Device, pin: GpioPinNum, req: Request) -> Ft260Result<()> {
+    ft260_set_request_u8(device, req, (pin.bits() & 0x3F) as u8)
 }

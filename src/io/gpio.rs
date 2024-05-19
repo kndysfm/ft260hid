@@ -57,7 +57,9 @@ impl<'a> Gpio<'a> {
     pub fn enable_pin(&self, group: Group) -> Ft260Result<()> {
         match group {
             Group::Gpio_0_1 => reports::gpio::set_i2c_pins(self.device, I2cEnableMode::Disabled),
-            Group::Gpio_2 => reports::gpio::select_gpio_2_function(self.device, Gpio2Function::Gpio),
+            Group::Gpio_2 => {
+                reports::gpio::select_gpio_2_function(self.device, Gpio2Function::Gpio)
+            }
             Group::Gpio_3 => {
                 reports::ft260_set_wakeup_interrupt(self.device, WakeupIntEnableMode::Disabled)
             }

@@ -60,11 +60,7 @@ fn ft260_set_request(device: &Device, request: Request) -> Ft260Result<()> {
     device.set_feature(&[ReportId::FeatSystemSetting as u8, request as u8])
 }
 
-fn ft260_set_request_u8(
-    device: &Device,
-    request: Request,
-    value: u8,
-) -> Ft260Result<()> {
+fn ft260_set_request_u8(device: &Device, request: Request, value: u8) -> Ft260Result<()> {
     device.set_feature(&[ReportId::FeatSystemSetting as u8, request as u8, value])
 }
 
@@ -82,11 +78,7 @@ fn ft260_set_request_u8x2(
     ])
 }
 
-fn ft260_set_request_u16(
-    device: &Device,
-    request: Request,
-    value: u16,
-) -> Ft260Result<()> {
+fn ft260_set_request_u16(device: &Device, request: Request, value: u16) -> Ft260Result<()> {
     device.set_feature(&[
         ReportId::FeatSystemSetting as u8,
         request as u8,
@@ -95,11 +87,7 @@ fn ft260_set_request_u16(
     ])
 }
 
-fn ft260_set_request_u32(
-    device: &Device,
-    request: Request,
-    value: u32,
-) -> Ft260Result<()> {
+fn ft260_set_request_u32(device: &Device, request: Request, value: u32) -> Ft260Result<()> {
     device.set_feature(&[
         ReportId::FeatSystemSetting as u8,
         request as u8,
