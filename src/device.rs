@@ -93,7 +93,8 @@ impl Device {
   }
 
   fn try_new(vendor_id: u16, product_id: u16, interface: i32, index: usize) -> Option<Self> {
-    assert!(interface == 0 || interface == 1);
+    if interface < 0 || interface > 1 { return None; }
+
     let api = hidapi::HidApi::new().expect("Failed to create HID API context");
     let mut infs: Vec<&DeviceInfo> = Vec::new();
     for inf in api.device_list() {
