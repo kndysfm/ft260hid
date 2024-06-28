@@ -146,7 +146,7 @@ fn test_i2c_write_read() {
     let mut i2c = dev.i2c();
     assert!(i2c.init(i2c::KBPS_DEFAULT).is_ok());
 
-    for i in 0..10 {
+    for _ in 0..10 {
         let mut data = [0u8; EEPROM_PAGE_SIZE];
         thread_rng().fill(&mut data);
         let addr = [random::<u8>() & 0xF8u8];

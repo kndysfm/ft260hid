@@ -1,7 +1,7 @@
 use crate::device::Device;
 use crate::hid::consts::*;
 use crate::hid::reports::*;
-use crate::{Ft260Error, Ft260Result};
+use crate::{Ft260Result};
 
 pub(crate) fn select_gpio_2_function(
     device: &Device,

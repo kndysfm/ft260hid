@@ -4,7 +4,7 @@
 ///
 use bitflags::bitflags;
 
-use crate::{Ft260Error, Ft260Result};
+use crate::{Ft260Error};
 
 // see "https://stackoverflow.com/questions/28028854/how-do-i-match-enum-values-with-an-integer"
 macro_rules! back_to_enum {
@@ -125,8 +125,8 @@ pub(crate) enum Gpio2Function {
     /// [default] the indicator when entering the USB suspending state
     SuspOut = 1,
     /// as the power enable indicator when the FT260 is USB enumerated
-    _PwrEn = 2,
-    ///
+    PwrEn = 2,
+    /// the power enable indicator when the FT260 is USB enumerated
     TxLed = 4,
 }
 

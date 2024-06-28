@@ -1,9 +1,9 @@
-use std::time::Duration;
-
 use crate::hid::consts::*;
 use crate::hid::reports;
 use crate::io::gpio;
 use crate::{device::Device, Ft260Error, Ft260Result};
+use log::debug;
+use std::time::Duration;
 
 /// Interface type to use I2C function of the FT2260 device.
 #[derive(Debug)]
@@ -48,10 +48,10 @@ impl<'a> I2c<'a> {
     pub fn init(&mut self, kbps: u16) -> Ft260Result<()> {
         let gpio = self.device.gpio();
         if let Err(e) = gpio.disable_pin(gpio::Group::Gpio_0_1) {
-            dbg!(&e);
+            debug!("{:?}", &e);
             return Err(e);
         }
-        match reports::i2c::init(&self.device, kbps) {
+        match reports::i2c::init(self.device, kbps) {
             Ok(()) => {
                 self.inited = true;
                 Ok(())
@@ -169,7 +169,7 @@ impl<'a> I2c<'a> {
     pub fn is_idle(&self) -> Option<bool> {
         match reports::i2c::get_status(self.device) {
             Ok(s) => Some(s == I2cBusStatus::ControllerIdle),
-            Err(e) => None,
+            Err(_) => None,
         }
     }
 
