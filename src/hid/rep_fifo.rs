@@ -24,11 +24,11 @@ impl ReportFifo {
 
     /// check if a key exists in dictionary or else insert new queue for the key
     fn check_key(&mut self, k: u8) -> bool {
-        if self.dict.contains_key(&k) {
-            true
-        } else {
-            self.dict.insert(k, VecDeque::new());
+        if let std::collections::hash_map::Entry::Vacant(e) = self.dict.entry(k) {
+            e.insert(VecDeque::new());
             false
+        } else {
+            true
         }
     }
 

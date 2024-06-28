@@ -8,11 +8,11 @@ use std::thread;
 use std::thread::JoinHandle;
 
 // use hidapi crate only in this module
-use hidapi::{DeviceInfo, HidError};
-
 use crate::hid::rep_fifo::ReportFifo;
 use crate::io::{gpio::Gpio, i2c::I2c, uart::Uart};
 use crate::{Ft260Error, Ft260Result};
+use hidapi::{DeviceInfo, HidError};
+use log::debug;
 
 /// conversion of `HidError` into `Ft260Error`
 impl From<HidError> for Ft260Error {
@@ -65,7 +65,7 @@ impl Device {
     /// Create new `Device` instance from `hidapi::HidDevice` instance.  
     /// When it is opened, a new thread is spawned and it continues to read HID input report from the device.
     fn new(hid: hidapi::HidDevice) -> Self {
-        dbg!(&hid);
+        debug!("{:?}", &hid);
         let mutex_hid = Arc::new(Mutex::new(hid));
         let mutex_fifo = Arc::new(Mutex::new(ReportFifo::new()));
         let reading = Arc::new(AtomicBool::new(true));
@@ -74,7 +74,7 @@ impl Device {
             let mutex_hid = mutex_hid.clone();
             let mutex_fifo = mutex_fifo.clone();
             let reading = reading.clone();
-            print!("now starting a thread to read HID");
+            debug!("now starting a thread to read HID");
             move || loop {
                 let mut buf = [0u8; 256];
                 let mut has_report = false;
@@ -91,7 +91,7 @@ impl Device {
                 }
                 thread::yield_now();
                 if !reading.load(Ordering::Relaxed) {
-                    print!("`reading` got to be `false`");
+                    debug!("`reading` got to be `false`");
                     return;
                 }
             }
@@ -108,7 +108,7 @@ impl Device {
     /// Enumerate HID interfaces with specified conditions (VID, PID, IF#)  
     /// If some were found, then create new `Device` instance from `hidapi::HidDevice` instance
     fn try_new(vendor_id: u16, product_id: u16, interface: i32, index: usize) -> Option<Self> {
-        if interface < 0 || interface > 1 {
+        if !(0..=1).contains(&interface) {
             return None;
         }
 
@@ -118,27 +118,23 @@ impl Device {
             if (vendor_id, product_id, interface)
                 == (inf.vendor_id(), inf.product_id(), inf.interface_number())
             {
-                print!("found:");
-                dbg!(inf);
+                debug!("found: {:?}", inf);
                 infs.push(inf);
             }
         }
         if index >= infs.len() {
             // out of index range
             None
+        } else if let Ok(hid) = infs[index].open_device(&api) {
+            debug!("opened: {:?}", index);
+            Some(Self::new(hid))
         } else {
-            if let Ok(hid) = infs[index].open_device(&api) {
-                print!("opened:");
-                dbg!(index);
-                Some(Self::new(hid))
-            } else {
-                None
-            }
+            None
         }
     }
 
     /// Exclusive reference to FIFO instance for HID input report from FT260 device
-    pub(crate) fn fifo<'a>(&'a self) -> MutexGuard<'a, ReportFifo> {
+    pub(crate) fn fifo(&self) -> MutexGuard<'_, ReportFifo> {
         self.fifo.lock().unwrap()
     }
 

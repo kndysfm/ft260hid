@@ -1,10 +1,9 @@
-use std::time::Duration;
-
-use crate::device;
 use crate::hid::consts::*;
 use crate::hid::reports;
 use crate::io::gpio;
 use crate::{device::Device, Ft260Result};
+use log::{debug};
+use std::time::Duration;
 
 macro_rules! hid_const_compatible {
   (
@@ -21,7 +20,7 @@ macro_rules! hid_const_compatible {
     }
 
     impl $name {
-      fn to_hid_const(&self) -> $tgt {
+      fn to_hid_const(self) -> $tgt {
         match self {
           $($name::$vname => $tgt::$vname,)*
         }
@@ -139,8 +138,8 @@ pub const BAUD_DEFAULT: u32 = 115200;
 /// Default timeout duration
 pub const DURATION_WAIT_DEFAULT: Duration = Duration::from_millis(5000);
 
-impl Config {
-    pub fn default() -> Self {
+impl Default for Config {
+    fn default() -> Self {
         Self {
             mode: Mode::NoFlowControl,
             baud: BAUD_DEFAULT,
@@ -150,6 +149,9 @@ impl Config {
             breaking: Breaking::NoBreak,
         }
     }
+}
+
+impl Config {
     fn from_hid(cfg: &reports::uart::Config) -> Self {
         Self {
             mode: Mode::from_hid_const(&cfg.mode),
@@ -169,14 +171,6 @@ pub struct Uart<'a> {
     inited: bool,
 }
 
-macro_rules! dbg_write {
-    ($msg:expr) => {
-        if cfg!(debug_assertions) {
-            println!("[DEBUG] {}:{} '{}'", file!(), line!(), $msg);
-        }
-    };
-}
-
 impl<'a> Uart<'a> {
     pub(crate) fn new(device: &'a Device) -> Self {
         Self {
@@ -190,13 +184,13 @@ impl<'a> Uart<'a> {
         let device = self.device;
         let gpio = device.gpio();
         if let Err(e) = gpio.disable_pin(gpio::Group::Gpio_B_C_D_E_F_H) {
-            dbg!(&e);
-            dbg_write!("Failed to disable Gpio B,C,D,E,F,H");
+            debug!("{:?}", &e);
+            debug!("Failed to disable Gpio B,C,D,E,F,H");
             return Err(e);
         }
         if let Err(e) = reports::uart::init(device) {
-            dbg!(&e);
-            dbg_write!("Failed to initialize UART function");
+            debug!("{:?}", &e);
+            debug!("Failed to initialize UART function");
             return Err(e);
         }
         self.inited = true;
@@ -207,30 +201,12 @@ impl<'a> Uart<'a> {
     pub fn set_config(&self, cfg: &Config) -> Ft260Result<()> {
         let device = self.device;
 
-        if let Err(e) = reports::uart::set_flow_control(device, cfg.mode.to_hid_const()) {
-            dbg!(&e);
-            return Err(e);
-        }
-        if let Err(e) = reports::uart::set_baud_rate(device, cfg.baud) {
-            dbg!(&e);
-            return Err(e);
-        }
-        if let Err(e) = reports::uart::set_data_bits(device, cfg.data_bits.to_hid_const()) {
-            dbg!(&e);
-            return Err(e);
-        }
-        if let Err(e) = reports::uart::set_stop_bit(device, cfg.stop_bit.to_hid_const()) {
-            dbg!(&e);
-            return Err(e);
-        }
-        if let Err(e) = reports::uart::set_parity(device, cfg.parity.to_hid_const()) {
-            dbg!(&e);
-            return Err(e);
-        }
-        if let Err(e) = reports::uart::set_breaking(device, cfg.breaking.to_hid_const()) {
-            dbg!(&e);
-            return Err(e);
-        }
+        reports::uart::set_flow_control(device, cfg.mode.to_hid_const())?;
+        reports::uart::set_baud_rate(device, cfg.baud)?;
+        reports::uart::set_data_bits(device, cfg.data_bits.to_hid_const())?;
+        reports::uart::set_stop_bit(device, cfg.stop_bit.to_hid_const())?;
+        reports::uart::set_parity(device, cfg.parity.to_hid_const())?;
+        reports::uart::set_breaking(device, cfg.breaking.to_hid_const())?;
 
         Ok(())
     }
@@ -240,7 +216,7 @@ impl<'a> Uart<'a> {
         let device = self.device;
         let cfg = reports::uart::get_config(device);
         if cfg.is_err() {
-            dbg_write!("Failed to get UART config");
+            debug!("Failed to get UART config");
             return Err(cfg.unwrap_err());
         }
         let cfg = cfg.unwrap();

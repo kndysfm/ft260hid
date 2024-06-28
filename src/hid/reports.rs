@@ -1,6 +1,3 @@
-use std::time::{Duration, Instant};
-
-use bitflags::Flags;
 
 use crate::device::Device;
 use crate::hid::consts::*;
@@ -82,7 +79,7 @@ fn ft260_set_request_u16(device: &Device, request: Request, value: u16) -> Ft260
     device.set_feature(&[
         ReportId::FeatSystemSetting as u8,
         request as u8,
-        ((value >> 0) & 0xFF) as u8,
+        (value & 0xFF) as u8,
         ((value >> 8) & 0xFF) as u8,
     ])
 }
@@ -91,7 +88,7 @@ fn ft260_set_request_u32(device: &Device, request: Request, value: u32) -> Ft260
     device.set_feature(&[
         ReportId::FeatSystemSetting as u8,
         request as u8,
-        ((value >> 0) & 0xFF) as u8,
+        (value & 0xFF) as u8,
         ((value >> 8) & 0xFF) as u8,
         ((value >> 16) & 0xFF) as u8,
         ((value >> 24) & 0xFF) as u8,
@@ -110,7 +107,7 @@ fn ft260_get_feature(device: &Device, report_id: u8) -> Ft260Result<FeatureRepor
     let mut buf = [0u8; 64];
     buf[0] = report_id;
     let res = device.get_feature(&mut buf);
-    if let Ok(sz) = res {
+    if let Ok(_sz) = res {
         Ok(buf)
     } else {
         Err(res.err().unwrap())
@@ -147,7 +144,7 @@ pub(crate) fn ft260_get_chip_version(device: &Device) -> Ft260Result<u32> {
     let res = device.get_feature(&mut buf);
     if let Ok(sz) = res {
         if sz > 5 {
-            let ver = ((buf[1] as u32) << 0)
+            let ver = (buf[1] as u32)
                 | ((buf[2] as u32) << 8)
                 | ((buf[3] as u32) << 16)
                 | ((buf[4] as u32) << 24);

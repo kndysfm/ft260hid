@@ -1,7 +1,5 @@
 use std::time::{Duration, Instant};
 
-use bitflags::Flags;
-
 use crate::device::Device;
 use crate::hid::consts::*;
 use crate::hid::reports::*;
@@ -12,54 +10,26 @@ pub(crate) fn init(device: &Device, kbps: u16) -> Ft260Result<()> {
 }
 
 fn decide_i2c_report_id(length: usize) -> ReportId {
-    if length <= 0x04 {
-        return ReportId::InOutI2cReport04;
-    }
-    if length <= 0x08 {
-        return ReportId::InOutI2cReport08;
-    }
-    if length <= 0x0C {
-        return ReportId::InOutI2cReport0C;
-    }
-    if length <= 0x10 {
-        return ReportId::InOutI2cReport10;
-    }
-    if length <= 0x14 {
-        return ReportId::InOutI2cReport14;
-    }
-    if length <= 0x18 {
-        return ReportId::InOutI2cReport18;
-    }
-    if length <= 0x1C {
-        return ReportId::InOutI2cReport1C;
-    }
-    if length <= 0x20 {
-        return ReportId::InOutI2cReport20;
-    }
-    if length <= 0x24 {
-        return ReportId::InOutI2cReport24;
-    }
-    if length <= 0x28 {
-        return ReportId::InOutI2cReport28;
-    }
-    if length <= 0x2C {
-        return ReportId::InOutI2cReport2C;
-    }
-    if length <= 0x30 {
-        return ReportId::InOutI2cReport30;
-    }
-    if length <= 0x34 {
-        return ReportId::InOutI2cReport34;
-    }
-    if length <= 0x38 {
-        return ReportId::InOutI2cReport38;
-    }
-    if length <= 0x3C {
-        return ReportId::InOutI2cReport3C;
-    } else {
-        return ReportId::InOutI2cReportOverflow;
+    match length {
+        0x00..=0x04 => ReportId::InOutI2cReport04,
+        0x05..=0x08 => ReportId::InOutI2cReport08,
+        0x09..=0x0C => ReportId::InOutI2cReport0C,
+        0x0D..=0x10 => ReportId::InOutI2cReport10,
+        0x11..=0x14 => ReportId::InOutI2cReport14,
+        0x15..=0x18 => ReportId::InOutI2cReport18,
+        0x19..=0x1C => ReportId::InOutI2cReport1C,
+        0x1D..=0x20 => ReportId::InOutI2cReport20,
+        0x21..=0x24 => ReportId::InOutI2cReport24,
+        0x25..=0x28 => ReportId::InOutI2cReport28,
+        0x29..=0x2C => ReportId::InOutI2cReport2C,
+        0x2D..=0x30 => ReportId::InOutI2cReport30,
+        0x31..=0x34 => ReportId::InOutI2cReport34,
+        0x35..=0x38 => ReportId::InOutI2cReport38,
+        0x39..=0x3C => ReportId::InOutI2cReport3C,
+        _ => ReportId::InOutI2cReportOverflow,
     }
 }
+
 
 const I2C_PAYLOAD_SIZE_MAX: usize = 0x3C;
 
@@ -98,9 +68,9 @@ fn i2c_write_request(
     buf[1] = slave_addr;
     buf[2] = flag.bits();
     buf[3] = length as u8;
-    for i in 0..length {
-        buf[4 + i] = src[src_index + i];
-    }
+
+    buf[4..(length + 4)].copy_from_slice(&src[src_index..(length + src_index)]);
+
     device.write_output(&buf)
 }
 
@@ -114,8 +84,10 @@ fn i2c_read_request(
     buf[0] = ReportId::OutI2cReadRequest as u8;
     buf[1] = slave_addr;
     buf[2] = flag.bits();
-    buf[3] = ((length >> 0) & 0xFF) as u8;
-    buf[4] = ((length >> 8) & 0xFF) as u8;
+
+    // Split the length into bytes and store them in the buffer
+    buf[3..5].copy_from_slice(&(length as u16).to_le_bytes());
+
     device.write_output(&buf)
 }
 
@@ -164,9 +136,9 @@ pub(crate) fn read(
                 } else {
                     sz_buf - idx
                 };
-                for i in 0..sz_cpy {
-                    buf[idx + i] = data[2 + i];
-                }
+
+                buf[idx..(sz_cpy + idx)].copy_from_slice(&data[2..(sz_cpy + 2)]);
+
                 byte_returned += sz_cpy;
                 idx += sz_cpy;
             } else {
@@ -191,7 +163,7 @@ pub(crate) fn write(
 
     let mut start = flag.contains(I2cCondition::Start);
     let mut restart = flag.contains(I2cCondition::ReStart);
-    let mut stop = flag.contains(I2cCondition::Stop);
+    let stop = flag.contains(I2cCondition::Stop);
 
     loop {
         let mut fval = I2cCondition::None;
@@ -210,9 +182,9 @@ pub(crate) fn write(
         };
         let report_id = decide_i2c_report_id(size_write);
         let mut slice = feat_rep_buf();
-        for i in 0..size_write {
-            slice[i] = buf[byte_written + i];
-        }
+
+        slice[..size_write].copy_from_slice(&buf[byte_written..(size_write + byte_written)]);
+
         byte_remained -= size_write;
         let res = i2c_write_request(
             device,
@@ -223,9 +195,9 @@ pub(crate) fn write(
             &slice,
             0,
         );
-        if let Ok(_) = res {
+        if res.is_ok() {
             byte_written += size_write;
-            if byte_remained <= 0 {
+            if byte_remained == 0 {
                 return Ok(byte_written);
             } else {
                 continue;
