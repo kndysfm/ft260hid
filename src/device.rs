@@ -193,7 +193,7 @@ impl Drop for Device {
         self.reading.store(false, Ordering::Relaxed);
         loop {
             if self.handle.is_finished() {
-                println!("joined.");
+                debug!("joined.");
                 return;
             }
         }
