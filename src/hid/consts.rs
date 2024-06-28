@@ -147,7 +147,7 @@ pub(crate) enum GpioGFunction {
     /// GPIOG
     Gpio = 0,
     /// as the power enable indicator when FT260 is USB enumerated. Low active
-    _PwrEn = 2,
+    PwrEn = 2,
     /// as the LED driving source when data is received on UART RX port
     RxLed = 5,
     /// [default] as the battery charger detection indicator output when the device is connected to a dedicated battery charger port

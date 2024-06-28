@@ -10,10 +10,10 @@ pub(crate) fn init(device: &Device) -> Ft260Result<()> {
     buf[0] = ReportId::FeatSystemSetting as u8;
     buf[1] = Request::ConfigureUart as u8;
     buf[2] = UartEnableMode::DtrDsr as u8;
-    buf[3] = (BAUD_DEFAULT & 0xFF) as u8;
-    buf[4] = ((BAUD_DEFAULT >> 8) & 0xFF) as u8;
-    buf[5] = ((BAUD_DEFAULT >> 16) & 0xFF) as u8;
-    buf[6] = ((BAUD_DEFAULT >> 24) & 0xFF) as u8;
+
+    // Use to_le_bytes to convert BAUD_DEFAULT into a byte array and copy it to the buffer
+    buf[3..7].copy_from_slice(&BAUD_DEFAULT.to_le_bytes());
+
     buf[7] = UartDataBits::Eight as u8;
     buf[8] = UartParity::None as u8;
     buf[9] = UartStopBit::One as u8;
