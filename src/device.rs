@@ -188,8 +188,7 @@ impl Device {
 
 impl Drop for Device {
     fn drop(&mut self) {
-        print!("drop it:");
-        dbg!(&self);
+        debug!("drop it: {:?}", &self);
         // stop reading thread
         self.reading.store(false, Ordering::Relaxed);
         loop {
